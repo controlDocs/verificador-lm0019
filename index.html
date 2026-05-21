@@ -345,10 +345,33 @@ function setupManualLoad(){
 
 /* ── VARIANTES DE CÓDIGO ── */
 function variants(raw){
-  var list=[raw, raw.toUpperCase(), raw.toLowerCase()];
-  var m=raw.match(/^(.+)-(\d+)$/);
-  if(m){list.push(m[1]);list.push(m[1].toUpperCase());}
-  return list.filter(function(v,i,a){return a.indexOf(v)===i;});
+  raw=raw.trim();
+  var list=[raw, raw.toUpperCase()];
+
+  /* Ejemplos de códigos:
+     INST-0001-14      → probar INST-0001
+     DA-PLN-0003-1     → probar DA-PLN-0003
+     MAN-0033          → sin variante adicional
+     PROC-001-v2       → probar PROC-001
+  */
+
+  /* Quitar último segmento numérico: DA-PLN-0003-1 → DA-PLN-0003 */
+  var m1=raw.match(/^(.+)-(\d+)$/);
+  if(m1){
+    list.push(m1[1]);
+    list.push(m1[1].toUpperCase());
+    /* También quitar otro nivel: INST-0001-14 ya cubierto, pero por si hay 3 niveles */
+    var m2=m1[1].match(/^(.+)-(\d+)$/);
+    if(m2){list.push(m2[1]);list.push(m2[1].toUpperCase());}
+  }
+
+  /* Quitar sufijo de versión tipo -v2, -V2 */
+  var mv=raw.match(/^(.+)-[vV]\d+$/);
+  if(mv){list.push(mv[1]);list.push(mv[1].toUpperCase());}
+
+  /* Versión solo con número al final sin guión extra: DA-PLN-00031 → no aplica */
+
+  return list.filter(function(v,i,a){return v&&a.indexOf(v)===i;});
 }
 
 /* ── BÚSQUEDA ── */
