@@ -16,9 +16,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .hdr p{font-size:12px;color:rgba(255,255,255,.72);margin-top:2px;}
 .card{background:#fff;border-radius:14px;border:1px solid #e5e7eb;margin-bottom:14px;overflow:hidden;}
 .card-h{background:#f9fafb;border-bottom:1px solid #e5e7eb;padding:12px 16px;font-size:13px;font-weight:700;color:#6b7280;display:flex;align-items:center;gap:8px;}
-.card-h span.ico{font-size:18px;}
+.card-h .ico{font-size:18px;}
 .card-b{padding:14px;}
-/* EXCEL STATUS */
 .excel-status{border-radius:10px;padding:14px 16px;font-size:14px;margin-bottom:4px;display:flex;align-items:center;gap:12px;}
 .es-loading{background:#eff6ff;border:1.5px solid #3b82f6;color:#1e40af;}
 .es-ok{background:#ecfdf5;border:1.5px solid #059669;color:#065f46;}
@@ -28,22 +27,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .es-txt p{font-size:12px;opacity:.85;}
 .spinner{width:22px;height:22px;border:3px solid #bfdbfe;border-top-color:#3b82f6;border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;}
 @keyframes spin{to{transform:rotate(360deg);}}
-/* INSPECTOR FORM */
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
 @media(max-width:480px){.form-row{grid-template-columns:1fr;}}
 .form-group label{display:block;font-size:12px;font-weight:700;color:#6b7280;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;}
 .inp{width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid #d1d5db;font-size:15px;background:#fff;color:#111;-webkit-appearance:none;appearance:none;outline:none;}
 .inp:focus{border-color:#1a3a5c;}
-/* ALERTS */
-.alert{display:none;border-radius:10px;padding:12px 14px;font-size:13px;margin-bottom:10px;line-height:1.5;}
+.alert{display:none;border-radius:10px;padding:12px 14px;font-size:13px;margin-bottom:10px;line-height:1.6;}
 .alert h4{font-size:14px;font-weight:700;margin-bottom:3px;}
 .alert-warn{background:#fffbeb;border:1.5px solid #d97706;color:#92400e;}
-.alert-err{background:#fef2f2;border:1.5px solid #dc2626;color:#991b1b;}
-/* BUTTONS */
 .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:10px;font-size:15px;font-weight:700;border:none;cursor:pointer;color:#fff;-webkit-appearance:none;appearance:none;transition:opacity .15s;margin-bottom:10px;}
-.btn:active{opacity:.82;}
-.btn:disabled{opacity:.38;pointer-events:none;}
-.btn span{font-size:20px;}
+.btn:active{opacity:.8;}
+.btn:disabled{opacity:.35;pointer-events:none;}
+.btn em{font-size:20px;font-style:normal;}
 .btn-blue{background:#1a3a5c;}
 .btn-green{background:#0f6e56;}
 .btn-amber{background:#b45309;}
@@ -54,19 +49,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
 /* CAMERA */
 .cam-wrap{display:none;margin-bottom:12px;border-radius:10px;overflow:hidden;background:#000;position:relative;}
-video{width:100%;display:block;max-height:320px;object-fit:cover;}
-.cam-hint{position:absolute;bottom:10px;left:0;right:0;text-align:center;color:rgba(255,255,255,.9);font-size:13px;font-weight:500;pointer-events:none;}
-.cam-frame{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;}
-.cam-box{width:220px;height:150px;border:2.5px solid #00e599;border-radius:10px;position:relative;}
-.c{position:absolute;width:24px;height:24px;border-color:#fff;border-style:solid;}
-.c-tl{top:-2px;left:-2px;border-width:4px 0 0 4px;border-radius:4px 0 0 0;}
-.c-tr{top:-2px;right:-2px;border-width:4px 4px 0 0;border-radius:0 4px 0 0;}
-.c-bl{bottom:-2px;left:-2px;border-width:0 0 4px 4px;border-radius:0 0 0 4px;}
-.c-br{bottom:-2px;right:-2px;border-width:0 4px 4px 0;border-radius:0 0 4px 0;}
-.scan-line{position:absolute;left:8px;right:8px;height:2.5px;background:linear-gradient(90deg,transparent,#00e599,transparent);animation:sl 2s ease-in-out infinite;}
+#cam-video{width:100%;display:block;max-height:340px;object-fit:cover;}
+#scan-canvas{display:none;}
+.cam-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
+.cam-box{width:230px;height:155px;border:2.5px solid #00e599;border-radius:10px;position:relative;}
+.cc{position:absolute;width:24px;height:24px;border-color:#fff;border-style:solid;}
+.cc-tl{top:-2px;left:-2px;border-width:4px 0 0 4px;border-radius:4px 0 0 0;}
+.cc-tr{top:-2px;right:-2px;border-width:4px 4px 0 0;border-radius:0 4px 0 0;}
+.cc-bl{bottom:-2px;left:-2px;border-width:0 0 4px 4px;border-radius:0 0 0 4px;}
+.cc-br{bottom:-2px;right:-2px;border-width:0 4px 4px 0;border-radius:0 0 4px 0;}
+.sline{position:absolute;left:8px;right:8px;height:2.5px;background:linear-gradient(90deg,transparent,#00e599,transparent);animation:sl 2s ease-in-out infinite;}
 @keyframes sl{0%,100%{top:10px;}50%{top:calc(100% - 14px);}}
-/* LOG */
-.log{background:#0d1117;color:#4ade80;font-size:12px;font-family:monospace;padding:10px 12px;border-radius:8px;min-height:44px;max-height:90px;overflow-y:auto;white-space:pre-wrap;margin-bottom:10px;line-height:1.5;}
+.cam-hint{color:rgba(255,255,255,.9);font-size:12px;margin-top:10px;text-align:center;}
+.log{background:#0d1117;color:#4ade80;font-size:12px;font-family:monospace;padding:10px 12px;border-radius:8px;min-height:44px;max-height:100px;overflow-y:auto;white-space:pre-wrap;margin-bottom:10px;line-height:1.5;}
 /* RESULTS */
 .res-ok{background:#ecfdf5;border:2px solid #059669;border-radius:14px;padding:20px;text-align:center;margin-bottom:14px;}
 .res-ok .big{font-size:48px;display:block;margin-bottom:6px;}
@@ -86,7 +81,6 @@ td:first-child{color:#6b7280;width:42%;font-weight:600;}
 td:last-child{word-break:break-word;color:#111;}
 .ver-ok{color:#065f46;font-weight:700;}
 .ver-fail{color:#b91c1c;font-weight:700;}
-/* SAVED */
 .si{background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;margin-bottom:10px;position:relative;}
 .si h4{font-size:15px;font-weight:700;padding-right:30px;}
 .si p{font-size:12px;color:#6b7280;margin-top:3px;}
@@ -95,7 +89,6 @@ td:last-child{word-break:break-word;color:#111;}
 .bdg-fail{background:#fee2e2;color:#991b1b;}
 .bdg-warn{background:#fef3c7;color:#92400e;}
 .rm{position:absolute;top:10px;right:10px;background:none;border:none;font-size:20px;color:#9ca3af;cursor:pointer;padding:2px;line-height:1;}
-/* STATS */
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
 .stat-box{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px 8px;text-align:center;}
 .stat-box .num{font-size:22px;font-weight:800;color:#1a3a5c;}
@@ -103,7 +96,6 @@ td:last-child{word-break:break-word;color:#111;}
 .stat-box.ok .num{color:#065f46;}
 .stat-box.fail .num{color:#b91c1c;}
 .stat-box.pct .num{color:#5b21b6;}
-/* HIST */
 .hi{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #f3f4f6;font-size:13px;}
 .hi:last-child{border-bottom:none;}
 .hi-code{font-weight:700;flex:1;font-size:12px;}
@@ -114,24 +106,18 @@ td:last-child{word-break:break-word;color:#111;}
 
 <div class="hdr">
   <div class="hdr-ico">📋</div>
-  <div>
-    <h1>Verificador LM-0019</h1>
-    <p>Grupo Procaps · Inspección de Documentos</p>
-  </div>
+  <div><h1>Verificador LM-0019</h1><p>Grupo Procaps · Inspección de Documentos</p></div>
 </div>
 
 <div class="wrap">
 
-  <!-- ESTADO EXCEL -->
+  <!-- EXCEL STATUS -->
   <div class="card">
     <div class="card-h"><span class="ico">📊</span> Listado Maestro LM-0019</div>
     <div class="card-b">
       <div class="excel-status es-loading" id="excel-status">
         <div class="spinner"></div>
-        <div class="es-txt">
-          <h4>Cargando listado maestro...</h4>
-          <p>Descargando LISTADO MAESTRO DE DOCUMENTOS.xlsx</p>
-        </div>
+        <div class="es-txt"><h4>Cargando listado maestro...</h4><p>Descargando LISTADO MAESTRO DE DOCUMENTOS.xlsx</p></div>
       </div>
       <div id="manual-load-wrap" style="display:none;margin-top:10px;">
         <p style="font-size:13px;color:#6b7280;margin-bottom:8px;">Carga manual del archivo:</p>
@@ -140,7 +126,7 @@ td:last-child{word-break:break-word;color:#111;}
     </div>
   </div>
 
-  <!-- DATOS DEL INSPECTOR -->
+  <!-- INSPECTOR -->
   <div class="card">
     <div class="card-h"><span class="ico">👤</span> Datos de la inspección</div>
     <div class="card-b">
@@ -151,7 +137,7 @@ td:last-child{word-break:break-word;color:#111;}
         </div>
         <div class="form-group">
           <label>Área inspeccionada</label>
-          <input type="text" class="inp" id="area" placeholder="Ej: Producción, Calidad..." autocomplete="off">
+          <input type="text" class="inp" id="area-inp" placeholder="Ej: Producción, Calidad..." autocomplete="off">
         </div>
       </div>
     </div>
@@ -161,37 +147,33 @@ td:last-child{word-break:break-word;color:#111;}
   <div class="card">
     <div class="card-h"><span class="ico">🔍</span> Escanear / Buscar código</div>
     <div class="card-b">
-
-      <div class="alert alert-warn" id="warn-noexcel">
-        <h4>⏳ Espera un momento</h4>
-        El listado maestro se está cargando...
-      </div>
+      <div class="alert alert-warn" id="warn-noexcel"><h4>⏳ Espera un momento</h4>El listado maestro se está cargando...</div>
 
       <input type="text" class="inp" id="mc" style="margin-bottom:10px;"
-        placeholder="Escribe el código (ej: INST-0001-16 o INST-0001-16-183)"
+        placeholder="Escribe el código (ej: INST-0001-16)"
         autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
-      <button class="btn btn-green" id="btn-buscar">
-        <span>🔍</span> Buscar código
-      </button>
+      <button class="btn btn-green" id="btn-buscar"><em>🔍</em> Buscar código</button>
 
+      <!-- Video -->
       <div class="cam-wrap" id="cam-wrap">
-        <video id="vid" autoplay playsinline muted></video>
-        <div class="cam-frame">
+        <video id="cam-video" autoplay playsinline muted webkit-playsinline></video>
+        <canvas id="scan-canvas"></canvas>
+        <div class="cam-overlay">
           <div class="cam-box">
-            <div class="c c-tl"></div><div class="c c-tr"></div>
-            <div class="c c-bl"></div><div class="c c-br"></div>
-            <div class="scan-line"></div>
+            <div class="cc cc-tl"></div><div class="cc cc-tr"></div>
+            <div class="cc cc-bl"></div><div class="cc cc-br"></div>
+            <div class="sline"></div>
           </div>
+          <div class="cam-hint">Centra el código de barras en el recuadro</div>
         </div>
-        <div class="cam-hint">Centra el código de barras en el recuadro verde</div>
       </div>
 
       <div class="btn-row">
-        <button class="btn btn-blue" id="btn-cam" style="margin-bottom:0"><span>📷</span> Abrir cámara</button>
-        <button class="btn btn-gray" id="btn-stop" style="display:none;margin-bottom:0"><span>⏹</span> Detener</button>
+        <button class="btn btn-blue" id="btn-cam" style="margin-bottom:0"><em>📷</em> Abrir cámara</button>
+        <button class="btn btn-gray" id="btn-stop" style="display:none;margin-bottom:0"><em>⏹</em> Detener</button>
       </div>
 
-      <div class="log" id="log" style="margin-top:10px">Iniciando... cargando listado maestro.</div>
+      <div class="log" id="log" style="margin-top:10px">Iniciando...</div>
 
       <div class="alert alert-warn" id="perm-android" style="margin-top:8px;">
         <h4>📷 Permiso de cámara — Android Chrome</h4>
@@ -207,18 +189,15 @@ td:last-child{word-break:break-word;color:#111;}
     </div>
   </div>
 
-  <!-- RESULTADO -->
   <div id="res"></div>
 
-  <!-- ACCIONES POST RESULTADO -->
   <div id="act" style="display:none;margin-bottom:14px;">
     <div class="btn-row">
-      <button class="btn btn-amber" id="btn-save" style="margin-bottom:0"><span>💾</span> Guardar en informe</button>
-      <button class="btn btn-gray" id="btn-new" style="margin-bottom:0"><span>🔄</span> Nueva consulta</button>
+      <button class="btn btn-amber" id="btn-save" style="margin-bottom:0"><em>💾</em> Guardar en informe</button>
+      <button class="btn btn-gray" id="btn-new" style="margin-bottom:0"><em>🔄</em> Nueva consulta</button>
     </div>
   </div>
 
-  <!-- ESTADÍSTICAS -->
   <div id="stats-wrap" style="display:none">
     <div class="stats-row">
       <div class="stat-box"><div class="num" id="st-total">0</div><div class="lbl">Leídos</div></div>
@@ -228,169 +207,114 @@ td:last-child{word-break:break-word;color:#111;}
     </div>
   </div>
 
-  <!-- INFORME GUARDADO -->
   <div class="card" id="inf-card" style="display:none">
     <div class="card-h"><span class="ico">📋</span> Registros del informe — <span id="inf-cnt">0</span></div>
     <div class="card-b">
       <div id="inf-list"></div>
       <div class="btn-row" style="margin-top:12px">
-        <button class="btn btn-purple" id="btn-pdf" style="margin-bottom:0"><span>📄</span> Generar PDF</button>
-        <button class="btn btn-pink" id="btn-mail" style="margin-bottom:0"><span>✉️</span> Enviar correo</button>
+        <button class="btn btn-purple" id="btn-pdf" style="margin-bottom:0"><em>📄</em> Generar PDF</button>
+        <button class="btn btn-pink" id="btn-mail" style="margin-bottom:0"><em>✉️</em> Enviar correo</button>
       </div>
-      <button class="btn btn-red" id="btn-clear" style="margin-top:10px"><span>🗑️</span> Limpiar todos los registros</button>
+      <button class="btn btn-red" id="btn-clear" style="margin-top:10px"><em>🗑️</em> Limpiar todos</button>
     </div>
   </div>
 
-  <!-- HISTORIAL -->
   <div class="card" id="hist-card" style="display:none">
-    <div class="card-h"><span class="ico">🕐</span> Historial de consultas</div>
+    <div class="card-h"><span class="ico">🕐</span> Historial</div>
     <div class="card-b" id="hist-body"></div>
   </div>
 
 </div>
 
+<!-- XLSX y jsPDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <script>
-/* ── CONFIGURACIÓN ── */
 var EXCEL_URL='https://raw.githubusercontent.com/controlDocs/verificador-lm0019/main/LISTADO%20MAESTRO%20DE%20DOCUMENTOS.xlsx';
 
-/* ── ESTADO ── */
-var excelData=[], curRes=null, saved=[], scanHist=[];
-var camStream=null, scanInterval=null;
+var excelData=[],curRes=null,saved=[],scanHist=[];
+var camStream=null,scanTimer=null,scanActive=false;
 var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 var isAndroid=/Android/i.test(navigator.userAgent);
 
-/* ── LOG ── */
-function lg(m){
-  var el=document.getElementById('log');
-  var t=new Date().toLocaleTimeString('es-CO');
-  el.textContent='['+t+'] '+m+'\n'+el.textContent;
-  console.log(m);
-}
+function lg(m){var e=document.getElementById('log'),t=new Date().toLocaleTimeString('es-CO');e.textContent='['+t+'] '+m+'\n'+e.textContent;console.log(m);}
 function g(id){return document.getElementById(id);}
 function show(id,d){g(id).style.display=d||'block';}
 function hide(id){g(id).style.display='none';}
 
-/* ── ESTADO EXCEL ── */
 function setExcelStatus(type,title,sub){
   var s=g('excel-status');
   s.className='excel-status es-'+type;
-  var ico=type==='loading'?'<div class="spinner"></div>'
-         :type==='ok'?'<div class="es-ico">✅</div>'
-         :'<div class="es-ico">❌</div>';
+  var ico=type==='loading'?'<div class="spinner"></div>':type==='ok'?'<div class="es-ico">✅</div>':'<div class="es-ico">❌</div>';
   s.innerHTML=ico+'<div class="es-txt"><h4>'+title+'</h4><p>'+sub+'</p></div>';
 }
 
-/* ── ESPERAR LIBRERÍA ── */
-function waitLib(check,cb,n){
-  n=n||0; if(n>40){lg('ERROR: librería no cargó');return;}
-  if(check()){cb();}else{setTimeout(function(){waitLib(check,cb,n+1);},300);}
-}
+function waitLib(check,cb,n){n=n||0;if(n>50)return;if(check()){cb();}else{setTimeout(function(){waitLib(check,cb,n+1);},300);}}
 
-/* ══════════════════════════════════════
-   PARSEAR CÓDIGO ESCANEADO
-   Formatos posibles:
-   INST-0001-16-183
-   INST-0001-16 183
-   INST-0001-16
-   INST'0058-11
-   Retorna: { base: 'INST-0001', version: '16' }
-══════════════════════════════════════ */
+/* ══ PARSEO DEL CÓDIGO ══
+   Soporta todos los formatos:
+   INST-0001-16-183  → base=INST-0001  ver=16
+   INST-0001-16 183  → base=INST-0001  ver=16
+   INST-0001-16      → base=INST-0001  ver=16
+   INST'0058-11      → base=INST-0058  ver=11
+   MAN-0033          → base=MAN-0033   ver=null
+*/
 function parseCode(raw){
-  /* Normalizar: reemplazar comilla simple por guión, quitar espacios extras */
-  var s=raw.trim().replace(/'/g,'-').replace(/\s+/g,' ');
-  lg('Parseando: "'+s+'"');
+  var s=raw.trim()
+    .replace(/'/g,'-')   // comilla → guión
+    .replace(/[^\w\d\-\s]/g,'')  // limpiar caracteres raros
+    .replace(/\s+/g,' ')
+    .toUpperCase();
+  lg('RAW escaneado: "'+raw+'"  Normalizado: "'+s+'"');
 
-  /* Patrón: LETRAS-NUMEROS-VERSION[-RESTO] o LETRAS-NUMEROS-VERSION RESTO
-     El código base es siempre TIPO-NNNN (ej: INST-0001, MAN-0033)
-     La versión es el primer número que sigue después del código base
-  */
-  // Intentar: XXXX-0000-VER...
-  var m=s.match(/^([A-Z]+-\d+)-(\d+)/i);
-  if(m){
-    return{base:m[1].toUpperCase(), version:m[2], raw:raw};
-  }
-  // Intentar: XXXX-0000 VER...
-  var m2=s.match(/^([A-Z]+-\d+)\s+(\d+)/i);
-  if(m2){
-    return{base:m2[1].toUpperCase(), version:m2[2], raw:raw};
-  }
-  // Solo código sin versión
-  var m3=s.match(/^([A-Z]+-\d+)/i);
-  if(m3){
-    return{base:m3[1].toUpperCase(), version:null, raw:raw};
-  }
-  return{base:s.toUpperCase(), version:null, raw:raw};
+  // Patrón 1: LETRAS-NUMEROS-VER-... (guión como separador de versión)
+  var m1=s.match(/^([A-Z]{2,}-\d{4})-(\d+)/);
+  if(m1) return{base:m1[1],version:m1[2],raw:raw};
+
+  // Patrón 2: LETRAS-NUMEROS VER... (espacio como separador de versión)
+  var m2=s.match(/^([A-Z]{2,}-\d{4})\s+(\d+)/);
+  if(m2) return{base:m2[1],version:m2[2],raw:raw};
+
+  // Patrón 3: solo código sin versión
+  var m3=s.match(/^([A-Z]{2,}-\d{4})/);
+  if(m3) return{base:m3[1],version:null,raw:raw};
+
+  return{base:s,version:null,raw:raw};
 }
 
-/* ══════════════════════════════════════
-   BUSCAR EN EL EXCEL
-   Busca por código base en "Código Actual" o "Código Anterior"
-   Compara versión leída vs versión en columna "Versión"
-══════════════════════════════════════ */
+/* ══ BÚSQUEDA ══ */
 function searchCode(raw){
-  var parsed=parseCode(raw);
-  lg('Base: "'+parsed.base+'" | Versión leída: "'+parsed.version+'"');
-
-  var CODIGO_COLS=['Código Actual','Codigo Actual','Código Anterior','Codigo Anterior'];
-
-  for(var ci=0;ci<CODIGO_COLS.length;ci++){
+  var p=parseCode(raw);
+  lg('Buscando base="'+p.base+'" ver="'+p.version+'"');
+  var COLS=['Código Actual','Codigo Actual','Código Anterior','Codigo Anterior'];
+  for(var ci=0;ci<COLS.length;ci++){
     for(var i=0;i<excelData.length;i++){
-      var cellVal=String(excelData[i][CODIGO_COLS[ci]]||'').trim().toUpperCase();
-      if(cellVal===parsed.base){
+      var cv=String(excelData[i][COLS[ci]]||'').trim().toUpperCase();
+      if(cv===p.base){
         var row=excelData[i];
-        var versionListado=String(row['Versión']||row['Version']||'').trim();
-        var versionLeida=parsed.version;
-
-        /* Comparar versiones */
-        var versionOk=false;
-        var versionMsg='';
-        if(!versionLeida){
-          /* No se pudo leer versión del código de barras */
-          versionOk=null; /* indeterminado */
-          versionMsg='No se pudo leer la versión del código de barras';
-        }else if(parseInt(versionLeida)===parseInt(versionListado)){
-          versionOk=true;
-          versionMsg='Versión '+versionLeida+' coincide con el listado';
-        }else{
-          versionOk=false;
-          versionMsg='Versión leída '+versionLeida+' ≠ Versión en listado '+versionListado;
-        }
-
-        lg('Encontrado fila '+(i+5)+' | Ver listado: '+versionListado+' | Ok: '+versionOk);
-        return{
-          found:true,
-          codeOk: versionOk===true,
-          versionOk: versionOk,
-          row:row,
-          raw:raw,
-          base:parsed.base,
-          versionLeida:versionLeida,
-          versionListado:versionListado,
-          versionMsg:versionMsg,
-          col:CODIGO_COLS[ci]
-        };
+        var vl=String(row['Versión']||row['Version']||'').trim();
+        var vok=null,vmsg='';
+        if(!p.version){vok=null;vmsg='No se detectó versión en el código de barras';}
+        else if(parseInt(p.version)===parseInt(vl)){vok=true;vmsg='Versión '+p.version+' coincide ✓';}
+        else{vok=false;vmsg='Versión leída '+p.version+' ≠ versión listado '+vl;}
+        lg('ENCONTRADO fila '+(i+5)+' | vListado='+vl+' | vOk='+vok);
+        return{found:true,codeOk:vok===true,versionOk:vok,row:row,raw:raw,base:p.base,versionLeida:p.version,versionListado:vl,versionMsg:vmsg};
       }
     }
   }
-  lg('NO encontrado: '+parsed.base);
-  return{found:false,row:null,raw:raw,base:parsed.base,versionLeida:parsed.version,versionListado:null};
+  lg('NO encontrado: '+p.base);
+  return{found:false,row:null,raw:raw,base:p.base,versionLeida:p.version,versionListado:null};
 }
 
-/* ── MOSTRAR RESULTADO ── */
+/* ══ RESULTADO ══ */
 function showResult(res){
   curRes=res;
   var ts=new Date().toLocaleString('es-CO',{dateStyle:'short',timeStyle:'short'});
-  curRes.ts=ts; curRes.tsLong=new Date().toLocaleString('es-CO');
-
-  var area=g('res');
-  var h='';
-
+  curRes.ts=ts;curRes.tsLong=new Date().toLocaleString('es-CO');
+  var area=g('res'),h='';
   if(!res.found){
-    /* Código no existe en el listado */
-    h='<div class="res-fail"><span class="big">❌</span><h2>NO CUMPLE</h2>'
-      +'<p>Código <strong>'+res.base+'</strong> no encontrado en el listado maestro</p></div>'
+    h='<div class="res-fail"><span class="big">❌</span><h2>NO CUMPLE</h2><p>Código <strong>'+res.base+'</strong> no encontrado en el listado maestro</p></div>'
       +'<div class="card"><div class="card-h"><span class="ico">⚠️</span> Información</div><div class="card-b"><table>'
       +'<tr><td>Código escaneado</td><td>'+res.raw+'</td></tr>'
       +'<tr><td>Código buscado</td><td>'+res.base+'</td></tr>'
@@ -398,58 +322,39 @@ function showResult(res){
       +'<tr><td>Estado</td><td style="color:#b91c1c;font-weight:700">No encontrado en LM-0019</td></tr>'
       +'<tr><td>Consultado</td><td>'+ts+'</td></tr>'
       +'</table></div></div>';
-
   }else if(res.versionOk===true){
-    /* Código encontrado Y versión correcta → EN CUMPLIMIENTO */
-    h='<div class="res-ok"><span class="big">✅</span><h2>EN CUMPLIMIENTO</h2>'
-      +'<p>Código <strong>'+res.base+'</strong> · Versión <strong>'+res.versionLeida+'</strong> correcta</p></div>'
-      +buildDetailCard(res,ts);
-
+    h='<div class="res-ok"><span class="big">✅</span><h2>EN CUMPLIMIENTO</h2><p>Código <strong>'+res.base+'</strong> · Versión <strong>'+res.versionLeida+'</strong> correcta</p></div>'+buildDetail(res,ts);
   }else if(res.versionOk===false){
-    /* Código encontrado PERO versión incorrecta → HALLAZGO */
-    h='<div class="res-fail"><span class="big">⚠️</span><h2>HALLAZGO — VERSIÓN INCORRECTA</h2>'
-      +'<p>El documento existe pero la versión <strong>'+res.versionLeida+'</strong> no corresponde al listado (v'+res.versionListado+')</p></div>'
-      +buildDetailCard(res,ts);
-
+    h='<div class="res-fail"><span class="big">⚠️</span><h2>HALLAZGO — VERSIÓN INCORRECTA</h2><p>Versión leída <strong>'+res.versionLeida+'</strong> ≠ versión listado <strong>'+res.versionListado+'</strong></p></div>'+buildDetail(res,ts);
   }else{
-    /* Código encontrado pero no se pudo leer versión */
-    h='<div class="res-warn"><span class="big">⚠️</span><h2>CÓDIGO ENCONTRADO</h2>'
-      +'<p>No se pudo determinar la versión del código escaneado</p></div>'
-      +buildDetailCard(res,ts);
+    h='<div class="res-warn"><span class="big">⚠️</span><h2>CÓDIGO ENCONTRADO</h2><p>No se pudo verificar la versión</p></div>'+buildDetail(res,ts);
   }
-
   area.innerHTML=h;
   show('act');
   g('btn-save').disabled=false;
-  g('btn-save').innerHTML='<span>💾</span> Guardar en informe';
+  g('btn-save').innerHTML='<em>💾</em> Guardar en informe';
   scanHist.unshift({raw:res.raw,base:res.base,found:res.found,ok:res.codeOk,ts:ts});
   renderHist();
   setTimeout(function(){area.scrollIntoView({behavior:'smooth',block:'start'});},120);
 }
 
-function buildDetailCard(res,ts){
-  var r=res.row;
-  var verClass=res.versionOk===true?'ver-ok':'ver-fail';
+function buildDetail(res,ts){
+  var r=res.row,vc=res.versionOk===true?'ver-ok':'ver-fail';
   return '<div class="card"><div class="card-h"><span class="ico">📋</span> Detalle del documento</div><div class="card-b"><table>'
     +'<tr><td>Código</td><td>'+res.base+'</td></tr>'
     +'<tr><td>Descripción</td><td>'+(r['Descripción']||r['Descripcion']||'—')+'</td></tr>'
-    +'<tr><td>Versión leída</td><td class="'+verClass+'">'+(res.versionLeida||'No detectada')+'</td></tr>'
-    +'<tr><td>Versión listado</td><td class="'+verClass+'">'+(res.versionListado||'—')+'</td></tr>'
-    +'<tr><td>Verif. versión</td><td class="'+verClass+'">'+res.versionMsg+'</td></tr>'
-    +'<tr><td>Fecha de Vigencia</td><td>'+(r['Fecha de Vigencia']||'—')+'</td></tr>'
-    +'<tr><td>Fecha de Vencimiento</td><td>'+(r['Fecha de Vencimiento']||'—')+'</td></tr>'
+    +'<tr><td>Versión leída</td><td class="'+vc+'">'+(res.versionLeida||'No detectada')+'</td></tr>'
+    +'<tr><td>Versión listado</td><td class="'+vc+'">'+(res.versionListado||'—')+'</td></tr>'
+    +'<tr><td>Verificación</td><td class="'+vc+'">'+res.versionMsg+'</td></tr>'
+    +'<tr><td>Fecha Vigencia</td><td>'+(r['Fecha de Vigencia']||'—')+'</td></tr>'
+    +'<tr><td>Fecha Vencimiento</td><td>'+(r['Fecha de Vencimiento']||'—')+'</td></tr>'
     +'<tr><td>Estado</td><td>'+(r['Estado']||'—')+'</td></tr>'
     +'<tr><td>Consultado</td><td>'+ts+'</td></tr>'
     +'</table></div></div>';
 }
 
-/* ── BUSCAR ── */
 function doBuscar(){
-  if(!excelData.length){
-    show('warn-noexcel','block');
-    g('warn-noexcel').innerHTML='<h4>⏳ Listado no disponible</h4>El archivo aún se está cargando o hubo un error.';
-    return;
-  }
+  if(!excelData.length){show('warn-noexcel','block');g('warn-noexcel').innerHTML='<h4>⏳ Listado no disponible</h4>El archivo aún se está cargando o hubo un error.';return;}
   hide('warn-noexcel');
   var code=g('mc').value.trim();
   if(!code){alert('Escribe un código para buscar');return;}
@@ -459,54 +364,211 @@ function doBuscar(){
 g('btn-buscar').addEventListener('click',doBuscar);
 g('mc').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();doBuscar();}});
 
-/* ── GUARDAR ── */
+/* ══ CÁMARA ══
+   Estrategia multi-método:
+   1. BarcodeDetector nativo (Android Chrome, iOS 17.4+)
+   2. ZXing-js cargado dinámicamente (iOS Safari, otros)
+   3. Canvas manual como fallback
+*/
+var zxingLoaded=false;
+
+function loadZXing(cb){
+  if(zxingLoaded){cb();return;}
+  lg('Cargando ZXing para iOS...');
+  var s=document.createElement('script');
+  s.src='https://unpkg.com/@zxing/browser@0.1.4/umd/index.min.js';
+  s.onload=function(){zxingLoaded=true;lg('ZXing cargado OK');cb();};
+  s.onerror=function(){
+    lg('ZXing CDN1 falló, intentando CDN2...');
+    var s2=document.createElement('script');
+    s2.src='https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.4/umd/index.min.js';
+    s2.onload=function(){zxingLoaded=true;lg('ZXing CDN2 OK');cb();};
+    s2.onerror=function(){lg('ZXing no disponible');cb();};
+    document.head.appendChild(s2);
+  };
+  document.head.appendChild(s);
+}
+
+g('btn-cam').addEventListener('click',function(){
+  hide('perm-android');hide('perm-ios');
+  if(!excelData.length){show('warn-noexcel','block');g('warn-noexcel').innerHTML='<h4>⏳ Listado no disponible</h4>Espera a que cargue el listado.';return;}
+  hide('warn-noexcel');
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    alert('Tu navegador no soporta cámara.\niPhone/iPad: usa Safari.\nAndroid: usa Chrome.');
+    return;
+  }
+  g('btn-cam').disabled=true;
+  lg('Solicitando permiso de cámara...');
+  navigator.mediaDevices.getUserMedia({
+    video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},
+    audio:false
+  }).then(function(stream){
+    lg('Cámara OK');
+    camStream=stream;
+    var vid=g('cam-video');
+    vid.srcObject=stream;
+    vid.play().catch(function(e){lg('play error:'+e);});
+    show('cam-wrap');
+    hide('btn-cam');
+    show('btn-stop');
+    g('btn-stop').style.display='flex';
+    scanActive=true;
+
+    if(typeof BarcodeDetector!=='undefined'){
+      /* Método 1: BarcodeDetector nativo */
+      lg('Método: BarcodeDetector nativo');
+      startNativeDetector(vid);
+    }else{
+      /* Método 2: ZXing para iOS Safari */
+      lg('BarcodeDetector no disponible — cargando ZXing...');
+      loadZXing(function(){
+        if(typeof ZXingBrowser!=='undefined'||typeof window.ZXing!=='undefined'){
+          startZXing(vid);
+        }else{
+          /* Método 3: canvas frame-by-frame con QuaggaJS */
+          lg('ZXing no disponible — cargando Quagga...');
+          startQuagga();
+        }
+      });
+    }
+  }).catch(function(err){
+    lg('ERROR cámara: '+err.name+' — '+err.message);
+    g('btn-cam').disabled=false;
+    if(err.name==='NotAllowedError'||err.name==='PermissionDeniedError'){
+      if(isAndroid){show('perm-android','block');}else{show('perm-ios','block');}
+    }else if(err.name==='NotFoundError'){
+      alert('No se encontró cámara en este dispositivo.');
+    }else{
+      alert('Error al abrir cámara:\n'+err.name+': '+err.message);
+    }
+  });
+});
+
+function startNativeDetector(vid){
+  var det=new BarcodeDetector({formats:['code_128','ean_13','ean_8','code_39','qr_code','upc_a','upc_e','itf','codabar','data_matrix']});
+  scanTimer=setInterval(function(){
+    if(!scanActive||!camStream||vid.readyState<2)return;
+    det.detect(vid).then(function(codes){
+      if(codes&&codes.length){
+        var code=codes[0].rawValue;
+        lg('BarcodeDetector: "'+code+'"');
+        onCodeDetected(code);
+      }
+    }).catch(function(){});
+  },400);
+}
+
+function startZXing(vid){
+  lg('Iniciando ZXing...');
+  try{
+    var ZXing=window.ZXingBrowser||window.ZXing;
+    var hints=new Map();
+    var reader=new ZXing.BrowserMultiFormatReader(hints);
+    reader.decodeFromVideoElement(vid,function(result,err){
+      if(result&&scanActive){
+        var code=result.getText();
+        lg('ZXing: "'+code+'"');
+        onCodeDetected(code);
+      }
+    });
+    window._zxingReader=reader;
+  }catch(e){
+    lg('ZXing error: '+e+' — cargando Quagga...');
+    startQuagga();
+  }
+}
+
+function startQuagga(){
+  lg('Cargando Quagga...');
+  var s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js';
+  s.onload=function(){
+    lg('Quagga cargado, iniciando...');
+    Quagga.init({
+      inputStream:{name:'Live',type:'LiveStream',target:g('cam-wrap'),
+        constraints:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}},
+      locator:{patchSize:'medium',halfSample:true},
+      numOfWorkers:0,
+      decoder:{readers:['code_128_reader','ean_reader','code_39_reader','codabar_reader','upc_reader','i2of5_reader']},
+      locate:true
+    },function(err){
+      if(err){lg('Quagga init error: '+err);return;}
+      Quagga.start();
+      lg('Quagga activo');
+    });
+    Quagga.onDetected(function(data){
+      if(!scanActive)return;
+      var code=data.codeResult.code;
+      var errs=data.codeResult.decodedCodes.filter(function(x){return x.error!==undefined;}).map(function(x){return x.error;});
+      var avg=errs.length?errs.reduce(function(a,b){return a+b;},0)/errs.length:0;
+      if(avg>0.2)return;
+      lg('Quagga: "'+code+'" (err avg:'+avg.toFixed(2)+')');
+      onCodeDetected(code);
+    });
+  };
+  s.onerror=function(){lg('Quagga no disponible — usa entrada manual');};
+  document.head.appendChild(s);
+}
+
+function onCodeDetected(code){
+  if(!scanActive)return;
+  scanActive=false;
+  stopCam();
+  showResult(searchCode(code));
+}
+
+g('btn-stop').addEventListener('click',stopCam);
+function stopCam(){
+  scanActive=false;
+  if(scanTimer){clearInterval(scanTimer);scanTimer=null;}
+  if(window._zxingReader){try{window._zxingReader.reset();}catch(e){}window._zxingReader=null;}
+  if(typeof Quagga!=='undefined'){try{Quagga.stop();}catch(e){}}
+  if(camStream){camStream.getTracks().forEach(function(t){t.stop();});camStream=null;}
+  g('cam-video').srcObject=null;
+  hide('cam-wrap');show('btn-cam');hide('btn-stop');
+  g('btn-cam').disabled=false;
+  lg('Cámara detenida');
+}
+
+/* ══ GUARDAR / STATS ══ */
 g('btn-save').addEventListener('click',function(){
-  if(!curRes) return;
+  if(!curRes)return;
   saved.push(JSON.parse(JSON.stringify(curRes)));
-  renderSaved();
-  updateStats();
-  g('btn-save').disabled=true;
-  g('btn-save').innerHTML='<span>✅</span> Guardado';
+  renderSaved();updateStats();
+  g('btn-save').disabled=true;g('btn-save').innerHTML='<em>✅</em> Guardado';
   lg('Guardado ('+saved.length+')');
 });
 g('btn-new').addEventListener('click',function(){
-  curRes=null; g('res').innerHTML=''; hide('act');
-  g('mc').value=''; window.scrollTo({top:0,behavior:'smooth'});
+  curRes=null;g('res').innerHTML='';hide('act');g('mc').value='';
+  window.scrollTo({top:0,behavior:'smooth'});
 });
 function removeRec(i){saved.splice(i,1);renderSaved();updateStats();}
 g('btn-clear').addEventListener('click',function(){
-  if(!saved.length) return;
-  if(confirm('¿Limpiar todos los registros del informe?')){saved=[];renderSaved();updateStats();}
+  if(!saved.length)return;
+  if(confirm('¿Limpiar todos los registros?')){saved=[];renderSaved();updateStats();}
 });
 
 function updateStats(){
-  var total=saved.length;
-  var ok=saved.filter(function(r){return r.found&&r.versionOk===true;}).length;
-  var fail=total-ok;
-  var pct=total?Math.round(ok/total*100):0;
+  var total=saved.length,ok=saved.filter(function(r){return r.found&&r.versionOk===true;}).length;
+  var fail=total-ok,pct=total?Math.round(ok/total*100):0;
   if(total){
     show('stats-wrap');
-    g('st-total').textContent=total;
-    g('st-ok').textContent=ok;
-    g('st-fail').textContent=fail;
-    g('st-pct').textContent=pct+'%';
-  }else{
-    hide('stats-wrap');
-  }
+    g('st-total').textContent=total;g('st-ok').textContent=ok;
+    g('st-fail').textContent=fail;g('st-pct').textContent=pct+'%';
+  }else{hide('stats-wrap');}
 }
 
 function renderSaved(){
   if(!saved.length){hide('inf-card');return;}
-  show('inf-card');
-  g('inf-cnt').textContent=saved.length;
+  show('inf-card');g('inf-cnt').textContent=saved.length;
   var h='';
   saved.forEach(function(r,i){
-    var label=!r.found?'No encontrado':r.versionOk===true?'Cumple':r.versionOk===false?'Hallazgo':'Sin versión';
+    var lbl=!r.found?'No encontrado':r.versionOk===true?'Cumple':r.versionOk===false?'Hallazgo':'Sin versión';
     var cls=!r.found||r.versionOk===false?'bdg-fail':r.versionOk===true?'bdg-ok':'bdg-warn';
     var desc=r.row?(r.row['Descripción']||r.row['Descripcion']||''):'';
     h+='<div class="si"><button class="rm" onclick="removeRec('+i+')">✕</button>'
-      +'<h4>'+r.base+' <span class="bdg '+cls+'">'+label+'</span></h4>'
-      +'<p>V.leída: '+(r.versionLeida||'?')+' | V.listado: '+(r.versionListado||'?')+' | '+r.ts+'</p>'
+      +'<h4>'+r.base+' <span class="bdg '+cls+'">'+lbl+'</span></h4>'
+      +'<p>V.leída:'+(r.versionLeida||'?')+' | V.listado:'+(r.versionListado||'?')+' | '+r.ts+'</p>'
       +(desc?'<p style="margin-top:4px">'+String(desc).substring(0,60)+'</p>':'')
       +'</div>';
   });
@@ -514,94 +576,29 @@ function renderSaved(){
 }
 
 function renderHist(){
-  if(!scanHist.length) return;
+  if(!scanHist.length)return;
   show('hist-card');
   var h='';
   scanHist.slice(0,20).forEach(function(x){
     var cls=!x.found?'bdg-fail':x.ok?'bdg-ok':'bdg-fail';
     var lbl=!x.found?'No encontrado':x.ok?'Cumple':'Hallazgo';
-    h+='<div class="hi"><span class="hi-code">'+x.base+'</span>'
-      +'<span class="hi-ts">'+x.ts+'</span>'
-      +'<span class="bdg '+cls+'">'+lbl+'</span></div>';
+    h+='<div class="hi"><span class="hi-code">'+x.base+'</span><span class="hi-ts">'+x.ts+'</span><span class="bdg '+cls+'">'+lbl+'</span></div>';
   });
   g('hist-body').innerHTML=h;
 }
 
-/* ── CÁMARA ── */
-g('btn-cam').addEventListener('click',function(){
-  hide('perm-android'); hide('perm-ios');
-  if(!excelData.length){show('warn-noexcel','block');return;}
-  hide('warn-noexcel');
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
-    alert('Tu navegador no soporta cámara.\niPhone/iPad: usa Safari.\nAndroid: usa Chrome.');
-    return;
-  }
-  g('btn-cam').disabled=true;
-  lg('Solicitando cámara...');
-  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false})
-    .then(function(stream){
-      lg('Cámara OK');
-      camStream=stream;
-      var vid=g('vid'); vid.srcObject=stream; vid.play().catch(function(){});
-      show('cam-wrap'); hide('btn-cam'); show('btn-stop'); g('btn-stop').style.display='flex';
-      if(typeof BarcodeDetector!=='undefined'){
-        lg('Escaneo automático activo');
-        var det=new BarcodeDetector({formats:['code_128','ean_13','ean_8','code_39','qr_code','upc_a','upc_e','itf','codabar','data_matrix']});
-        scanInterval=setInterval(function(){
-          if(!camStream||vid.readyState<2) return;
-          det.detect(vid).then(function(codes){
-            if(codes&&codes.length){
-              var code=codes[0].rawValue;
-              lg('DETECTADO: '+code);
-              stopCam();
-              showResult(searchCode(code));
-            }
-          }).catch(function(){});
-        },500);
-      }else{
-        lg('BarcodeDetector no disponible — escribe el código manualmente');
-        alert('Cámara abierta.\nEscaneo automático no disponible en tu versión.\nLee el código y escríbelo manualmente.\n\n(Requiere iOS 17.4+ o Android Chrome actualizado)');
-      }
-    })
-    .catch(function(err){
-      lg('ERROR cámara: '+err.name);
-      g('btn-cam').disabled=false;
-      if(err.name==='NotAllowedError'||err.name==='PermissionDeniedError'){
-        if(isAndroid){show('perm-android','block');}else{show('perm-ios','block');}
-      }else if(err.name==='NotFoundError'){
-        alert('No se encontró cámara.');
-      }else{
-        alert('Error: '+err.name+'\n'+err.message);
-      }
-    });
-});
-g('btn-stop').addEventListener('click',stopCam);
-function stopCam(){
-  if(scanInterval){clearInterval(scanInterval);scanInterval=null;}
-  if(camStream){camStream.getTracks().forEach(function(t){t.stop();});camStream=null;}
-  g('vid').srcObject=null;
-  hide('cam-wrap'); show('btn-cam'); hide('btn-stop');
-  g('btn-cam').disabled=false; lg('Cámara detenida');
-}
-
-/* ── CARGA EXCEL AUTOMÁTICA ── */
+/* ══ EXCEL ══ */
 function loadExcelFromURL(){
-  lg('Descargando Excel desde GitHub...');
+  lg('Descargando Excel...');
   setExcelStatus('loading','Cargando listado maestro...','Descargando LISTADO MAESTRO DE DOCUMENTOS.xlsx');
   function doFetch(){
     fetch(EXCEL_URL)
-      .then(function(r){
-        if(!r.ok) throw new Error('HTTP '+r.status);
-        return r.arrayBuffer();
-      })
-      .then(function(buf){
-        processBuffer(buf);
-      })
+      .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.arrayBuffer();})
+      .then(function(buf){processBuffer(buf);})
       .catch(function(err){
         lg('ERROR descarga: '+err.message);
-        setExcelStatus('err','No se pudo cargar automáticamente',err.message+' — Usa la carga manual abajo');
-        show('manual-load-wrap');
-        setupManualLoad();
+        setExcelStatus('err','No se pudo cargar automáticamente',err.message);
+        show('manual-load-wrap');setupManualLoad();
       });
   }
   waitLib(function(){return typeof XLSX!=='undefined';},doFetch);
@@ -610,12 +607,10 @@ function loadExcelFromURL(){
 function processBuffer(buf){
   try{
     var wb=XLSX.read(new Uint8Array(buf),{type:'array'});
-    lg('Hojas: '+wb.SheetNames.join(', '));
     var ws=wb.Sheets[wb.SheetNames[0]];
     var raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
-    lg('Filas: '+raw.length);
     var hdrs=(raw[3]||[]).map(function(h){return String(h||'').trim();});
-    lg('Cols fila 4: '+hdrs.filter(Boolean).slice(0,6).join(' | '));
+    lg('Encabezados fila 4: '+hdrs.filter(Boolean).slice(0,6).join(' | '));
     var data=[];
     for(var i=4;i<raw.length;i++){
       var row=raw[i]||[];
@@ -624,188 +619,139 @@ function processBuffer(buf){
       hdrs.forEach(function(h,j){if(h)obj[h]=String(row[j]!==undefined?row[j]:'').trim();});
       data.push(obj);
     }
-    if(!data.length) throw new Error('Sin datos desde fila 5');
+    if(!data.length)throw new Error('Sin datos desde fila 5');
     excelData=data;
-    lg('OK: '+data.length+' documentos');
-    setExcelStatus('ok','LM-0019 listo · '+data.length+' documentos','Cargado correctamente — versiones verificables');
+    lg('OK: '+data.length+' documentos cargados');
+    setExcelStatus('ok','LM-0019 listo · '+data.length+' documentos','Versiones verificables automáticamente');
     hide('warn-noexcel');
   }catch(err){
-    lg('ERROR procesar: '+err.message);
+    lg('ERROR Excel: '+err.message);
     setExcelStatus('err','Error procesando el archivo',err.message);
-    show('manual-load-wrap');
-    setupManualLoad();
+    show('manual-load-wrap');setupManualLoad();
   }
 }
 
 function setupManualLoad(){
-  var inp=g('fi');
-  if(!inp||inp._ready) return;
-  inp._ready=true;
+  var inp=g('fi');if(!inp||inp._ready)return;inp._ready=true;
   inp.addEventListener('change',function(e){
-    var file=e.target.files&&e.target.files[0];
-    if(!file) return;
-    lg('Manual: '+file.name);
+    var file=e.target.files&&e.target.files[0];if(!file)return;
     var reader=new FileReader();
     reader.onload=function(ev){processBuffer(ev.target.result);};
     reader.readAsArrayBuffer(file);
   });
 }
 
-/* ══════════════════════════════════════
-   GENERAR PDF — INFORME DE INSPECCIÓN
-══════════════════════════════════════ */
+/* ══ PDF ══ */
 g('btn-pdf').addEventListener('click',genPDF);
 g('btn-mail').addEventListener('click',function(){
   var recs=saved.length?saved:(curRes?[curRes]:[]);
   if(!recs.length){alert('No hay registros guardados');return;}
   genPDF();
   var now=new Date().toLocaleString('es-CO');
-  var inspector=g('inspector').value.trim()||'No especificado';
-  var area=g('area').value.trim()||'No especificada';
-  var total=recs.length;
-  var ok=recs.filter(function(r){return r.found&&r.versionOk===true;}).length;
-  var fail=total-ok;
-  var pct=total?Math.round(ok/total*100):0;
-  var subj='Informe de Inspección LM-0019 | '+area+' | '+now;
+  var insp=g('inspector').value.trim()||'No especificado';
+  var area=g('area-inp').value.trim()||'No especificada';
+  var total=recs.length,ok=recs.filter(function(r){return r.found&&r.versionOk===true;}).length;
+  var subj='Informe Inspección LM-0019 | '+area+' | '+now;
   var body='INFORME DE INSPECCIÓN - GRUPO PROCAPS\n================================\n\n'
-    +'Inspector: '+inspector+'\nÁrea: '+area+'\nFecha: '+now+'\n\n'
-    +'RESULTADOS:\nDocumentos leídos  : '+total+'\nCumplen            : '+ok
-    +'\nHallazgos          : '+fail+'\nCumplimiento       : '+pct+'%\n\nDETALLE:\n';
+    +'Inspector: '+insp+'\nÁrea: '+area+'\nFecha: '+now+'\n\n'
+    +'RESULTADOS:\nLeídos: '+total+' | Cumplen: '+ok+' | Hallazgos: '+(total-ok)+' | Cumplimiento: '+(total?Math.round(ok/total*100):0)+'%\n\nDETALLE:\n';
   recs.forEach(function(r,i){
     var lbl=!r.found?'NO ENCONTRADO':r.versionOk===true?'CUMPLE':'HALLAZGO';
-    body+='\n['+(i+1)+'] '+r.base+' — '+lbl+'\n'
-      +'    V.leída: '+(r.versionLeida||'?')+' | V.listado: '+(r.versionListado||'?')+'\n'
-      +'    Fecha: '+(r.tsLong||r.ts)+'\n';
+    body+='\n['+(i+1)+'] '+r.base+' — '+lbl+'\n    V.leída:'+(r.versionLeida||'?')+' | V.listado:'+(r.versionListado||'?')+'\n    '+r.ts+'\n';
   });
-  body+='\n================================\nADJUNTA el PDF descargado a este correo.\nApp Verificadora LM-0019 - Grupo Procaps';
+  body+='\n================================\nADJUNTA el PDF descargado a este correo.';
   setTimeout(function(){window.location.href='mailto:?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body);},800);
-});
-g('btn-clear').addEventListener('click',function(){
-  if(!saved.length) return;
-  if(confirm('¿Limpiar todos los registros?')){saved=[];renderSaved();updateStats();}
 });
 
 function genPDF(){
   if(typeof window.jspdf==='undefined'){waitLib(function(){return typeof window.jspdf!=='undefined';},genPDF);return;}
   var recs=saved.length?saved:(curRes?[curRes]:[]);
   if(!recs.length){alert('No hay registros para el PDF');return;}
-
-  var inspector=g('inspector').value.trim()||'No especificado';
-  var areaInsp=g('area').value.trim()||'No especificada';
+  var insp=g('inspector').value.trim()||'No especificado';
+  var area=g('area-inp').value.trim()||'No especificada';
   var now=new Date().toLocaleString('es-CO');
-  var total=recs.length;
-  var ok=recs.filter(function(r){return r.found&&r.versionOk===true;}).length;
-  var fail=total-ok;
-  var pct=total?Math.round(ok/total*100):0;
-
+  var total=recs.length,ok=recs.filter(function(r){return r.found&&r.versionOk===true;}).length;
+  var fail=total-ok,pct=total?Math.round(ok/total*100):0;
   var jsPDF=window.jspdf.jsPDF;
   var doc=new jsPDF({unit:'mm',format:'a4'});
-
-  /* ── ENCABEZADO ── */
-  doc.setFillColor(26,58,92); doc.rect(0,0,210,38,'F');
-  doc.setFillColor(15,110,86); doc.rect(0,34,210,6,'F');
+  /* ENCABEZADO */
+  doc.setFillColor(26,58,92);doc.rect(0,0,210,40,'F');
+  doc.setFillColor(15,110,86);doc.rect(0,36,210,6,'F');
   doc.setTextColor(255,255,255);
-  doc.setFontSize(17); doc.setFont('helvetica','bold');
-  doc.text('INFORME DE INSPECCIÓN',14,14);
-  doc.setFontSize(11); doc.setFont('helvetica','normal');
-  doc.text('Listado Maestro de Documentos LM-0019  ·  Grupo Procaps',14,22);
+  doc.setFontSize(18);doc.setFont('helvetica','bold');
+  doc.text('INFORME DE INSPECCIÓN',14,15);
+  doc.setFontSize(11);doc.setFont('helvetica','normal');
+  doc.text('Listado Maestro de Documentos LM-0019  ·  Grupo Procaps',14,23);
   doc.setFontSize(9);
-  doc.text('Inspector: '+inspector+'   |   Área: '+areaInsp+'   |   Fecha: '+now,14,30);
-
-  /* ── RESUMEN ESTADÍSTICO ── */
-  var y=48;
-  doc.setTextColor(20,20,20);
-  doc.setFont('helvetica','bold'); doc.setFontSize(11);
-  doc.text('RESUMEN DE LA INSPECCIÓN',14,y); y+=6;
-  doc.setDrawColor(210,210,210); doc.line(14,y,196,y); y+=7;
-
-  /* Cajas de estadísticas */
+  doc.text('Inspector: '+insp+'   |   Área: '+area+'   |   Fecha: '+now,14,31);
+  /* ESTADÍSTICAS */
+  var y=50;doc.setTextColor(20,20,20);
+  doc.setFont('helvetica','bold');doc.setFontSize(11);
+  doc.text('RESUMEN DE LA INSPECCIÓN',14,y);y+=6;
+  doc.setDrawColor(210,210,210);doc.line(14,y,196,y);y+=8;
   var boxes=[
-    {label:'Documentos leídos',val:String(total),color:[26,58,92]},
-    {label:'En cumplimiento',val:String(ok),color:[6,95,70]},
-    {label:'Hallazgos',val:String(fail),color:[153,27,27]},
-    {label:'% Cumplimiento',val:pct+'%',color:[91,33,182]}
+    {l:'Documentos leídos',v:String(total),c:[26,58,92]},
+    {l:'En cumplimiento',v:String(ok),c:[6,95,70]},
+    {l:'Hallazgos',v:String(fail),c:[153,27,27]},
+    {l:'% Cumplimiento',v:pct+'%',c:[91,33,182]}
   ];
-  var bw=42, bh=18, bx=14;
+  var bx=14,bw=43,bh=20;
   boxes.forEach(function(b){
-    doc.setFillColor(b.color[0],b.color[1],b.color[2]);
+    doc.setFillColor(b.c[0],b.c[1],b.c[2]);
     doc.roundedRect(bx,y,bw,bh,2,2,'F');
     doc.setTextColor(255,255,255);
-    doc.setFont('helvetica','bold'); doc.setFontSize(14);
-    doc.text(b.val,bx+bw/2,y+10,{align:'center'});
-    doc.setFontSize(7); doc.setFont('helvetica','normal');
-    doc.text(b.label,bx+bw/2,y+15,{align:'center'});
-    bx+=bw+4;
+    doc.setFont('helvetica','bold');doc.setFontSize(15);
+    doc.text(b.v,bx+bw/2,y+11,{align:'center'});
+    doc.setFontSize(7);doc.setFont('helvetica','normal');
+    doc.text(b.l,bx+bw/2,y+17,{align:'center'});
+    bx+=bw+3;
   });
-  y+=bh+10;
-
-  /* ── DETALLE POR DOCUMENTO ── */
+  y+=bh+12;
+  /* DETALLE */
   doc.setTextColor(20,20,20);
-  doc.setFont('helvetica','bold'); doc.setFontSize(11);
-  doc.text('DETALLE DE DOCUMENTOS INSPECCIONADOS',14,y); y+=6;
-  doc.setDrawColor(210,210,210); doc.line(14,y,196,y); y+=7;
-
+  doc.setFont('helvetica','bold');doc.setFontSize(11);
+  doc.text('DETALLE DE DOCUMENTOS INSPECCIONADOS',14,y);y+=6;
+  doc.setDrawColor(210,210,210);doc.line(14,y,196,y);y+=8;
   recs.forEach(function(r,idx){
-    if(y>255){doc.addPage();y=20;}
-
-    var cumple=r.found&&r.versionOk===true;
-    var hallazgo=r.found&&r.versionOk===false;
-    var noEncontrado=!r.found;
-
-    /* Franja de estado */
+    if(y>252){doc.addPage();y=20;}
+    var cumple=r.found&&r.versionOk===true,hallazgo=r.found&&r.versionOk===false;
     if(cumple){doc.setFillColor(236,253,245);doc.setDrawColor(5,150,105);}
     else{doc.setFillColor(254,242,242);doc.setDrawColor(220,38,38);}
     doc.roundedRect(14,y,182,16,2,2,'FD');
-    doc.setFont('helvetica','bold'); doc.setFontSize(11);
-    doc.setTextColor(cumple?6:153, cumple?95:27, cumple?70:27);
-    var estado=cumple?'✓ CUMPLE':hallazgo?'✗ HALLAZGO — VERSIÓN INCORRECTA':'✗ NO ENCONTRADO EN LISTADO';
-    doc.text(estado+'   |   '+r.base,16,y+11);
-    y+=22;
-
-    /* Tabla de datos */
-    doc.setTextColor(20,20,20); doc.setFontSize(9.5);
+    doc.setFont('helvetica','bold');doc.setFontSize(11);
+    doc.setTextColor(cumple?6:153,cumple?95:27,cumple?70:27);
+    var est=cumple?'✓ CUMPLE':hallazgo?'✗ HALLAZGO — VERSIÓN INCORRECTA':'✗ NO ENCONTRADO';
+    doc.text(est+'  |  '+r.base,16,y+11);
+    y+=22;doc.setTextColor(20,20,20);
     var filas=[
       ['Código:',r.base],
-      ['Código escaneado:',r.raw||r.base],
       ['Descripción:',r.row?(r.row['Descripción']||r.row['Descripcion']||'—'):'—'],
-      ['Versión leída:',r.versionLeida||'No detectada'],
-      ['Versión listado:',r.versionListado||'—'],
+      ['Versión leída:',String(r.versionLeida||'No detectada')],
+      ['Versión listado (LM-0019):',String(r.versionListado||'—')],
       ['Verificación versión:',r.versionMsg||'—'],
       ['Estado documento:',r.row?(r.row['Estado']||'—'):'—'],
-      ['Fecha de Vigencia:',r.row?(r.row['Fecha de Vigencia']||'—'):'—'],
-      ['Fecha de Vencimiento:',r.row?(r.row['Fecha de Vencimiento']||'—'):'—'],
-      ['Fecha consulta:',r.tsLong||r.ts],
     ];
-    filas.forEach(function(fila){
+    filas.forEach(function(f){
       if(y>272){doc.addPage();y=20;}
-      doc.setFont('helvetica','bold'); doc.text(fila[0],18,y);
+      doc.setFont('helvetica','bold');doc.setFontSize(9.5);doc.text(f[0],18,y);
       doc.setFont('helvetica','normal');
-      /* Colorear versiones si hay hallazgo */
-      if((fila[0]==='Versión leída:'||fila[0]==='Versión listado:')&&hallazgo){
-        doc.setTextColor(180,30,30);
-      }else{
-        doc.setTextColor(20,20,20);
-      }
-      var ln=doc.splitTextToSize(String(fila[1]),118);
-      doc.text(ln,72,y); y+=ln.length*5.5+1;
-      doc.setTextColor(20,20,20);
+      if((f[0]==='Versión leída:'||f[0]==='Versión listado (LM-0019):')&&hallazgo){doc.setTextColor(180,30,30);}
+      else{doc.setTextColor(20,20,20);}
+      var ln=doc.splitTextToSize(f[1],116);doc.text(ln,78,y);
+      y+=ln.length*5.5+1;doc.setTextColor(20,20,20);
     });
     y+=8;
     if(idx<recs.length-1){doc.setDrawColor(225,225,225);doc.line(14,y-4,196,y-4);}
   });
-
-  /* ── PIE DE PÁGINA ── */
+  /* PIE */
   var ph=doc.internal.pageSize.height;
-  doc.setFillColor(26,58,92); doc.rect(0,ph-14,210,14,'F');
-  doc.setTextColor(255,255,255); doc.setFontSize(7.5); doc.setFont('helvetica','normal');
-  doc.text('Inspector: '+inspector+'  |  Área: '+areaInsp+'  |  '+now+'  |  LM-0019  |  Cumplimiento: '+pct+'%',105,ph-5.5,{align:'center'});
-
-  var fn='Informe_Inspeccion_LM0019_'+Date.now()+'.pdf';
-  doc.save(fn);
-  lg('PDF generado: '+fn);
+  doc.setFillColor(26,58,92);doc.rect(0,ph-14,210,14,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+  doc.text('Inspector: '+insp+' | Área: '+area+' | '+now+' | Cumplimiento: '+pct+'%',105,ph-5.5,{align:'center'});
+  doc.save('Informe_Inspeccion_LM0019_'+Date.now()+'.pdf');
+  lg('PDF generado');
 }
 
-/* ── ARRANQUE ── */
 window.addEventListener('load',function(){
   lg('App iniciada | '+(isAndroid?'Android':isIOS?'iOS':'Escritorio/Tablet'));
   loadExcelFromURL();
