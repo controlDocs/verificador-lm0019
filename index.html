@@ -16,9 +16,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .hdr p{font-size:12px;color:rgba(255,255,255,.72);margin-top:2px;}
 .card{background:#fff;border-radius:14px;border:1px solid #e5e7eb;margin-bottom:14px;overflow:hidden;}
 .card-h{background:#f9fafb;border-bottom:1px solid #e5e7eb;padding:12px 16px;font-size:13px;font-weight:700;color:#6b7280;display:flex;align-items:center;gap:8px;}
-.card-h span{font-size:18px;}
+.card-h span.ico{font-size:18px;}
 .card-b{padding:14px;}
-/* ESTADO EXCEL */
+/* EXCEL STATUS */
 .excel-status{border-radius:10px;padding:14px 16px;font-size:14px;margin-bottom:4px;display:flex;align-items:center;gap:12px;}
 .es-loading{background:#eff6ff;border:1.5px solid #3b82f6;color:#1e40af;}
 .es-ok{background:#ecfdf5;border:1.5px solid #059669;color:#065f46;}
@@ -28,14 +28,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .es-txt p{font-size:12px;opacity:.85;}
 .spinner{width:22px;height:22px;border:3px solid #bfdbfe;border-top-color:#3b82f6;border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;}
 @keyframes spin{to{transform:rotate(360deg);}}
+/* INSPECTOR FORM */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+@media(max-width:480px){.form-row{grid-template-columns:1fr;}}
+.form-group label{display:block;font-size:12px;font-weight:700;color:#6b7280;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;}
+.inp{width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid #d1d5db;font-size:15px;background:#fff;color:#111;-webkit-appearance:none;appearance:none;outline:none;}
+.inp:focus{border-color:#1a3a5c;}
 /* ALERTS */
 .alert{display:none;border-radius:10px;padding:12px 14px;font-size:13px;margin-bottom:10px;line-height:1.5;}
 .alert h4{font-size:14px;font-weight:700;margin-bottom:3px;}
 .alert-warn{background:#fffbeb;border:1.5px solid #d97706;color:#92400e;}
 .alert-err{background:#fef2f2;border:1.5px solid #dc2626;color:#991b1b;}
-/* INPUTS */
-.inp{width:100%;padding:14px;border-radius:10px;border:1.5px solid #d1d5db;font-size:16px;background:#fff;color:#111;-webkit-appearance:none;appearance:none;outline:none;margin-bottom:10px;}
-.inp:focus{border-color:#1a3a5c;}
 /* BUTTONS */
 .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:10px;font-size:15px;font-weight:700;border:none;cursor:pointer;color:#fff;-webkit-appearance:none;appearance:none;transition:opacity .15s;margin-bottom:10px;}
 .btn:active{opacity:.82;}
@@ -49,7 +52,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .btn-gray{background:#4b5563;}
 .btn-red{background:#b91c1c;}
 .btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
-@media(min-width:600px){.btn-row.three{grid-template-columns:1fr 1fr 1fr;}}
 /* CAMERA */
 .cam-wrap{display:none;margin-bottom:12px;border-radius:10px;overflow:hidden;background:#000;position:relative;}
 video{width:100%;display:block;max-height:320px;object-fit:cover;}
@@ -66,31 +68,46 @@ video{width:100%;display:block;max-height:320px;object-fit:cover;}
 /* LOG */
 .log{background:#0d1117;color:#4ade80;font-size:12px;font-family:monospace;padding:10px 12px;border-radius:8px;min-height:44px;max-height:90px;overflow-y:auto;white-space:pre-wrap;margin-bottom:10px;line-height:1.5;}
 /* RESULTS */
-.res-ok{background:#ecfdf5;border:2px solid #059669;border-radius:14px;padding:22px;text-align:center;margin-bottom:14px;}
-.res-ok .big{font-size:52px;display:block;margin-bottom:8px;}
-.res-ok h2{font-size:22px;font-weight:800;color:#065f46;}
-.res-ok p{color:#047857;font-size:14px;margin-top:5px;}
-.res-fail{background:#fef2f2;border:2px solid #dc2626;border-radius:14px;padding:22px;text-align:center;margin-bottom:14px;}
-.res-fail .big{font-size:52px;display:block;margin-bottom:8px;}
-.res-fail h2{font-size:22px;font-weight:800;color:#991b1b;}
-.res-fail p{color:#b91c1c;font-size:14px;margin-top:5px;}
+.res-ok{background:#ecfdf5;border:2px solid #059669;border-radius:14px;padding:20px;text-align:center;margin-bottom:14px;}
+.res-ok .big{font-size:48px;display:block;margin-bottom:6px;}
+.res-ok h2{font-size:20px;font-weight:800;color:#065f46;}
+.res-ok p{color:#047857;font-size:13px;margin-top:4px;}
+.res-fail{background:#fef2f2;border:2px solid #dc2626;border-radius:14px;padding:20px;text-align:center;margin-bottom:14px;}
+.res-fail .big{font-size:48px;display:block;margin-bottom:6px;}
+.res-fail h2{font-size:20px;font-weight:800;color:#991b1b;}
+.res-fail p{color:#b91c1c;font-size:13px;margin-top:4px;}
+.res-warn{background:#fffbeb;border:2px solid #d97706;border-radius:14px;padding:20px;text-align:center;margin-bottom:14px;}
+.res-warn .big{font-size:48px;display:block;margin-bottom:6px;}
+.res-warn h2{font-size:20px;font-weight:800;color:#92400e;}
+.res-warn p{color:#78350f;font-size:13px;margin-top:4px;}
 table{width:100%;border-collapse:collapse;font-size:14px;}
 td{padding:9px 6px;border-bottom:1px solid #f3f4f6;vertical-align:top;}
-td:first-child{color:#6b7280;width:40%;font-weight:600;}
+td:first-child{color:#6b7280;width:42%;font-weight:600;}
 td:last-child{word-break:break-word;color:#111;}
-@media(min-width:600px){td:first-child{width:32%;}}
+.ver-ok{color:#065f46;font-weight:700;}
+.ver-fail{color:#b91c1c;font-weight:700;}
 /* SAVED */
 .si{background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;margin-bottom:10px;position:relative;}
 .si h4{font-size:15px;font-weight:700;padding-right:30px;}
 .si p{font-size:12px;color:#6b7280;margin-top:3px;}
-.bdg{display:inline-block;padding:2px 9px;border-radius:20px;font-size:12px;font-weight:700;margin-left:8px;}
+.bdg{display:inline-block;padding:2px 9px;border-radius:20px;font-size:12px;font-weight:700;margin-left:6px;}
 .bdg-ok{background:#d1fae5;color:#065f46;}
 .bdg-fail{background:#fee2e2;color:#991b1b;}
+.bdg-warn{background:#fef3c7;color:#92400e;}
 .rm{position:absolute;top:10px;right:10px;background:none;border:none;font-size:20px;color:#9ca3af;cursor:pointer;padding:2px;line-height:1;}
-.hi{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f3f4f6;font-size:14px;}
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+.stat-box{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px 8px;text-align:center;}
+.stat-box .num{font-size:22px;font-weight:800;color:#1a3a5c;}
+.stat-box .lbl{font-size:11px;color:#6b7280;margin-top:3px;font-weight:600;}
+.stat-box.ok .num{color:#065f46;}
+.stat-box.fail .num{color:#b91c1c;}
+.stat-box.pct .num{color:#5b21b6;}
+/* HIST */
+.hi{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #f3f4f6;font-size:13px;}
 .hi:last-child{border-bottom:none;}
-.hi-code{font-weight:700;flex:1;}
-.hi-ts{font-size:11px;color:#9ca3af;}
+.hi-code{font-weight:700;flex:1;font-size:12px;}
+.hi-ts{font-size:10px;color:#9ca3af;}
 </style>
 </head>
 <body>
@@ -99,50 +116,64 @@ td:last-child{word-break:break-word;color:#111;}
   <div class="hdr-ico">📋</div>
   <div>
     <h1>Verificador LM-0019</h1>
-    <p>Grupo Procaps · Sistema de Documentación</p>
+    <p>Grupo Procaps · Inspección de Documentos</p>
   </div>
 </div>
 
 <div class="wrap">
 
-  <!-- ESTADO EXCEL AUTO -->
+  <!-- ESTADO EXCEL -->
   <div class="card">
-    <div class="card-h"><span>📊</span> Listado Maestro LM-0019</div>
+    <div class="card-h"><span class="ico">📊</span> Listado Maestro LM-0019</div>
     <div class="card-b">
       <div class="excel-status es-loading" id="excel-status">
         <div class="spinner"></div>
         <div class="es-txt">
           <h4>Cargando listado maestro...</h4>
-          <p>Descargando LISTADO MAESTRO DE DOCUMENTOS.xlsx desde el repositorio</p>
+          <p>Descargando LISTADO MAESTRO DE DOCUMENTOS.xlsx</p>
         </div>
       </div>
-      <!-- Botón de respaldo manual por si falla la carga automática -->
       <div id="manual-load-wrap" style="display:none;margin-top:10px;">
-        <p style="font-size:13px;color:#6b7280;margin-bottom:8px;">Si la carga automática falla, carga el archivo manualmente:</p>
-        <input type="file" id="fi" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" style="display:block;width:100%;padding:13px;border-radius:10px;border:none;background:#1a3a5c;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">
-        <input type="file" id="fi" style="display:block;width:100%;padding:13px;border-radius:10px;border:none;background:#1a3a5c;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">
+        <p style="font-size:13px;color:#6b7280;margin-bottom:8px;">Carga manual del archivo:</p>
+        <input type="file" id="fi" accept=".xlsx,.xls,.csv" style="display:block;width:100%;padding:13px;border-radius:10px;border:none;background:#1a3a5c;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">
+      </div>
+    </div>
+  </div>
+
+  <!-- DATOS DEL INSPECTOR -->
+  <div class="card">
+    <div class="card-h"><span class="ico">👤</span> Datos de la inspección</div>
+    <div class="card-b">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nombre del inspector</label>
+          <input type="text" class="inp" id="inspector" placeholder="Nombre completo" autocomplete="name">
+        </div>
+        <div class="form-group">
+          <label>Área inspeccionada</label>
+          <input type="text" class="inp" id="area" placeholder="Ej: Producción, Calidad..." autocomplete="off">
+        </div>
       </div>
     </div>
   </div>
 
   <!-- BUSCAR -->
   <div class="card">
-    <div class="card-h"><span>🔍</span> Buscar código</div>
+    <div class="card-h"><span class="ico">🔍</span> Escanear / Buscar código</div>
     <div class="card-b">
 
       <div class="alert alert-warn" id="warn-noexcel">
         <h4>⏳ Espera un momento</h4>
-        El listado maestro se está cargando automáticamente...
+        El listado maestro se está cargando...
       </div>
 
-      <input type="text" class="inp" id="mc"
-        placeholder="Escribe el código (ej: INST-0001 o INST-0001-14)"
+      <input type="text" class="inp" id="mc" style="margin-bottom:10px;"
+        placeholder="Escribe el código (ej: INST-0001-16 o INST-0001-16-183)"
         autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
       <button class="btn btn-green" id="btn-buscar">
         <span>🔍</span> Buscar código
       </button>
 
-      <!-- Cámara -->
       <div class="cam-wrap" id="cam-wrap">
         <video id="vid" autoplay playsinline muted></video>
         <div class="cam-frame">
@@ -160,47 +191,59 @@ td:last-child{word-break:break-word;color:#111;}
         <button class="btn btn-gray" id="btn-stop" style="display:none;margin-bottom:0"><span>⏹</span> Detener</button>
       </div>
 
-      <div class="log" id="log" style="margin-top:10px">Iniciando... cargando listado maestro automáticamente.</div>
+      <div class="log" id="log" style="margin-top:10px">Iniciando... cargando listado maestro.</div>
 
       <div class="alert alert-warn" id="perm-android" style="margin-top:8px;">
-        <h4>📷 Permiso de cámara — Android</h4>
-        1. Toca el ícono 🔒 o ⓘ en la barra de dirección<br>
+        <h4>📷 Permiso de cámara — Android Chrome</h4>
+        1. Toca el ícono 🔒 en la barra de dirección<br>
         2. Toca <strong>Permisos → Cámara → Permitir</strong><br>
         3. Recarga la página e intenta de nuevo
       </div>
       <div class="alert alert-warn" id="perm-ios" style="margin-top:8px;">
         <h4>📷 Permiso de cámara — iPhone/iPad</h4>
-        1. Ve a <strong>Configuración del iPhone</strong><br>
-        2. Busca <strong>Safari → Cámara → Permitir</strong><br>
-        3. Vuelve a Safari y recarga la página
+        1. Ve a <strong>Configuración → Safari → Cámara → Permitir</strong><br>
+        2. Vuelve a Safari y recarga la página
       </div>
-
     </div>
   </div>
 
+  <!-- RESULTADO -->
   <div id="res"></div>
 
+  <!-- ACCIONES POST RESULTADO -->
   <div id="act" style="display:none;margin-bottom:14px;">
     <div class="btn-row">
-      <button class="btn btn-amber" id="btn-save" style="margin-bottom:0"><span>💾</span> Guardar</button>
+      <button class="btn btn-amber" id="btn-save" style="margin-bottom:0"><span>💾</span> Guardar en informe</button>
       <button class="btn btn-gray" id="btn-new" style="margin-bottom:0"><span>🔄</span> Nueva consulta</button>
     </div>
   </div>
 
+  <!-- ESTADÍSTICAS -->
+  <div id="stats-wrap" style="display:none">
+    <div class="stats-row">
+      <div class="stat-box"><div class="num" id="st-total">0</div><div class="lbl">Leídos</div></div>
+      <div class="stat-box ok"><div class="num" id="st-ok">0</div><div class="lbl">Cumplen</div></div>
+      <div class="stat-box fail"><div class="num" id="st-fail">0</div><div class="lbl">Hallazgos</div></div>
+      <div class="stat-box pct"><div class="num" id="st-pct">0%</div><div class="lbl">Cumplimiento</div></div>
+    </div>
+  </div>
+
+  <!-- INFORME GUARDADO -->
   <div class="card" id="inf-card" style="display:none">
-    <div class="card-h"><span>📋</span> Informe — <span id="inf-cnt">0</span> registro(s)</div>
+    <div class="card-h"><span class="ico">📋</span> Registros del informe — <span id="inf-cnt">0</span></div>
     <div class="card-b">
       <div id="inf-list"></div>
       <div class="btn-row" style="margin-top:12px">
         <button class="btn btn-purple" id="btn-pdf" style="margin-bottom:0"><span>📄</span> Generar PDF</button>
         <button class="btn btn-pink" id="btn-mail" style="margin-bottom:0"><span>✉️</span> Enviar correo</button>
       </div>
-      <button class="btn btn-red" id="btn-clear" style="margin-top:10px"><span>🗑️</span> Limpiar todos</button>
+      <button class="btn btn-red" id="btn-clear" style="margin-top:10px"><span>🗑️</span> Limpiar todos los registros</button>
     </div>
   </div>
 
+  <!-- HISTORIAL -->
   <div class="card" id="hist-card" style="display:none">
-    <div class="card-h"><span>🕐</span> Historial de consultas</div>
+    <div class="card-h"><span class="ico">🕐</span> Historial de consultas</div>
     <div class="card-b" id="hist-body"></div>
   </div>
 
@@ -209,8 +252,8 @@ td:last-child{word-break:break-word;color:#111;}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-/* ── CONFIGURACIÓN — solo cambia esta URL si mueves el Excel ── */
-var EXCEL_URL = 'https://raw.githubusercontent.com/controlDocs/verificador-lm0019/main/LISTADO%20MAESTRO%20DE%20DOCUMENTOS.xlsx';
+/* ── CONFIGURACIÓN ── */
+var EXCEL_URL='https://raw.githubusercontent.com/controlDocs/verificador-lm0019/main/LISTADO%20MAESTRO%20DE%20DOCUMENTOS.xlsx';
 
 /* ── ESTADO ── */
 var excelData=[], curRes=null, saved=[], scanHist=[];
@@ -225,264 +268,284 @@ function lg(m){
   el.textContent='['+t+'] '+m+'\n'+el.textContent;
   console.log(m);
 }
+function g(id){return document.getElementById(id);}
+function show(id,d){g(id).style.display=d||'block';}
+function hide(id){g(id).style.display='none';}
 
-/* ── HELPERS ── */
-function show(id,d){document.getElementById(id).style.display=d||'block';}
-function hide(id){document.getElementById(id).style.display='none';}
-function el(id){return document.getElementById(id);}
-
-function setExcelStatus(type, title, sub){
-  var s=el('excel-status');
+/* ── ESTADO EXCEL ── */
+function setExcelStatus(type,title,sub){
+  var s=g('excel-status');
   s.className='excel-status es-'+type;
-  var ico = type==='loading'?'<div class="spinner"></div>'
-           :type==='ok'?'<div class="es-ico">✅</div>'
-           :'<div class="es-ico">❌</div>';
+  var ico=type==='loading'?'<div class="spinner"></div>'
+         :type==='ok'?'<div class="es-ico">✅</div>'
+         :'<div class="es-ico">❌</div>';
   s.innerHTML=ico+'<div class="es-txt"><h4>'+title+'</h4><p>'+sub+'</p></div>';
 }
 
-/* ── ESPERAR LIBRERÍAS ── */
-function waitLib(check, cb, tries){
-  tries=tries||0;
-  if(tries>30){lg('ERROR: librería no cargó'); return;}
-  if(check()){cb();}
-  else{setTimeout(function(){waitLib(check,cb,tries+1);},300);}
+/* ── ESPERAR LIBRERÍA ── */
+function waitLib(check,cb,n){
+  n=n||0; if(n>40){lg('ERROR: librería no cargó');return;}
+  if(check()){cb();}else{setTimeout(function(){waitLib(check,cb,n+1);},300);}
 }
 
-/* ── CARGA AUTOMÁTICA DEL EXCEL DESDE GITHUB ── */
-function loadExcelFromURL(){
-  lg('Descargando LISTADO MAESTRO DE DOCUMENTOS.xlsx desde GitHub...');
-  setExcelStatus('loading','Cargando listado maestro...','Descargando desde el repositorio, espera un momento');
-  hide('warn-noexcel');
+/* ══════════════════════════════════════
+   PARSEAR CÓDIGO ESCANEADO
+   Formatos posibles:
+   INST-0001-16-183
+   INST-0001-16 183
+   INST-0001-16
+   INST'0058-11
+   Retorna: { base: 'INST-0001', version: '16' }
+══════════════════════════════════════ */
+function parseCode(raw){
+  /* Normalizar: reemplazar comilla simple por guión, quitar espacios extras */
+  var s=raw.trim().replace(/'/g,'-').replace(/\s+/g,' ');
+  lg('Parseando: "'+s+'"');
 
-  function doFetch(){
-    fetch(EXCEL_URL)
-      .then(function(resp){
-        if(!resp.ok) throw new Error('HTTP '+resp.status+' — verifica que el archivo existe en GitHub');
-        lg('Descarga OK, procesando...');
-        return resp.arrayBuffer();
-      })
-      .then(function(buffer){
-        try{
-          var wb=XLSX.read(new Uint8Array(buffer),{type:'array'});
-          lg('Hojas: '+wb.SheetNames.join(', '));
-          var ws=wb.Sheets[wb.SheetNames[0]];
-          var raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
-          lg('Filas totales: '+raw.length);
-          var hdrs=(raw[3]||[]).map(function(h){return String(h||'').trim();});
-          lg('Encabezados fila 4: '+hdrs.filter(Boolean).slice(0,5).join(' | '));
-          var data=[];
-          for(var i=4;i<raw.length;i++){
-            var row=raw[i]||[];
-            if(row.every(function(c){return c===''||c===null||c===undefined;}))continue;
-            var obj={};
-            hdrs.forEach(function(h,j){if(h)obj[h]=String(row[j]!==undefined?row[j]:'').trim();});
-            data.push(obj);
-          }
-          if(!data.length) throw new Error('Sin datos desde fila 5');
-          excelData=data;
-          lg('OK: '+data.length+' documentos cargados');
-          setExcelStatus('ok',
-            'LM-0019 cargado correctamente',
-            data.length+' documentos listos para verificar · Actualizado automáticamente');
-          hide('warn-noexcel');
-        }catch(err){
-          throw new Error('Error procesando Excel: '+err.message);
-        }
-      })
-      .catch(function(err){
-        lg('ERROR carga automática: '+err.message);
-        setExcelStatus('err',
-          'No se pudo cargar automáticamente',
-          err.message);
-        /* Mostrar opción de carga manual como respaldo */
-        show('manual-load-wrap');
-        setupManualLoad();
-      });
-  }
-
-  /* Esperar a que XLSX esté listo */
-  waitLib(function(){return typeof XLSX!=='undefined';}, doFetch);
-}
-
-/* ── CARGA MANUAL (respaldo) ── */
-function setupManualLoad(){
-  var inp=document.querySelector('#manual-load-wrap input[type=file]');
-  if(!inp||inp._ready) return;
-  inp._ready=true;
-  inp.addEventListener('change',function(e){
-    var file=e.target.files&&e.target.files[0];
-    if(!file) return;
-    lg('Carga manual: '+file.name);
-    var reader=new FileReader();
-    reader.onload=function(ev){
-      try{
-        var wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});
-        var ws=wb.Sheets[wb.SheetNames[0]];
-        var raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
-        var hdrs=(raw[3]||[]).map(function(h){return String(h||'').trim();});
-        var data=[];
-        for(var i=4;i<raw.length;i++){
-          var row=raw[i]||[];
-          if(row.every(function(c){return c===''||c===null||c===undefined;}))continue;
-          var obj={};
-          hdrs.forEach(function(h,j){if(h)obj[h]=String(row[j]!==undefined?row[j]:'').trim();});
-          data.push(obj);
-        }
-        if(!data.length) throw new Error('Sin datos');
-        excelData=data;
-        lg('Manual OK: '+data.length+' documentos');
-        setExcelStatus('ok',file.name+' cargado',data.length+' documentos listos');
-        hide('manual-load-wrap');
-        hide('warn-noexcel');
-      }catch(err){
-        lg('ERROR manual: '+err.message);
-        setExcelStatus('err','Error al leer el archivo',err.message);
-      }
-    };
-    reader.readAsArrayBuffer(file);
-  });
-}
-
-/* ── VARIANTES DE CÓDIGO ── */
-function variants(raw){
-  raw=raw.trim();
-  var list=[raw, raw.toUpperCase()];
-
-  /* Ejemplos de códigos:
-     INST-0001-14      → probar INST-0001
-     DA-PLN-0003-1     → probar DA-PLN-0003
-     MAN-0033          → sin variante adicional
-     PROC-001-v2       → probar PROC-001
+  /* Patrón: LETRAS-NUMEROS-VERSION[-RESTO] o LETRAS-NUMEROS-VERSION RESTO
+     El código base es siempre TIPO-NNNN (ej: INST-0001, MAN-0033)
+     La versión es el primer número que sigue después del código base
   */
-
-  /* Quitar último segmento numérico: DA-PLN-0003-1 → DA-PLN-0003 */
-  var m1=raw.match(/^(.+)-(\d+)$/);
-  if(m1){
-    list.push(m1[1]);
-    list.push(m1[1].toUpperCase());
-    /* También quitar otro nivel: INST-0001-14 ya cubierto, pero por si hay 3 niveles */
-    var m2=m1[1].match(/^(.+)-(\d+)$/);
-    if(m2){list.push(m2[1]);list.push(m2[1].toUpperCase());}
+  // Intentar: XXXX-0000-VER...
+  var m=s.match(/^([A-Z]+-\d+)-(\d+)/i);
+  if(m){
+    return{base:m[1].toUpperCase(), version:m[2], raw:raw};
   }
-
-  /* Quitar sufijo de versión tipo -v2, -V2 */
-  var mv=raw.match(/^(.+)-[vV]\d+$/);
-  if(mv){list.push(mv[1]);list.push(mv[1].toUpperCase());}
-
-  /* Versión solo con número al final sin guión extra: DA-PLN-00031 → no aplica */
-
-  return list.filter(function(v,i,a){return v&&a.indexOf(v)===i;});
+  // Intentar: XXXX-0000 VER...
+  var m2=s.match(/^([A-Z]+-\d+)\s+(\d+)/i);
+  if(m2){
+    return{base:m2[1].toUpperCase(), version:m2[2], raw:raw};
+  }
+  // Solo código sin versión
+  var m3=s.match(/^([A-Z]+-\d+)/i);
+  if(m3){
+    return{base:m3[1].toUpperCase(), version:null, raw:raw};
+  }
+  return{base:s.toUpperCase(), version:null, raw:raw};
 }
 
-/* ── BÚSQUEDA ── */
-var PRIO_COLS=['Código Actual','Codigo Actual','Código Anterior','Codigo Anterior','Código','Codigo'];
-var KEY_COLS=['Código Actual','Código Anterior','Descripción','Versión','Tipo de Documento','Área Generadora','Proceso','Estado','Fecha de Vigencia','Fecha de Vencimiento','Administrador','Líder de Proceso','Correo Electrónico','Alcance Empresas','Doc. GxP'];
-
+/* ══════════════════════════════════════
+   BUSCAR EN EL EXCEL
+   Busca por código base en "Código Actual" o "Código Anterior"
+   Compara versión leída vs versión en columna "Versión"
+══════════════════════════════════════ */
 function searchCode(raw){
-  var vs=variants(raw);
-  lg('Buscando: '+vs.slice(0,2).join(' | ')+' en '+excelData.length+' registros');
-  for(var vi=0;vi<vs.length;vi++){
-    var q=vs[vi].trim();
-    var ql=q.toLowerCase();
-    for(var ci=0;ci<PRIO_COLS.length;ci++){
-      for(var i=0;i<excelData.length;i++){
-        var v=String(excelData[i][PRIO_COLS[ci]]||'').trim();
-        if(v&&v.toLowerCase()===ql){
-          lg('ENCONTRADO en "'+PRIO_COLS[ci]+'" fila '+(i+5));
-          return{found:true,row:excelData[i],code:raw,matched:v};
-        }
-      }
-    }
+  var parsed=parseCode(raw);
+  lg('Base: "'+parsed.base+'" | Versión leída: "'+parsed.version+'"');
+
+  var CODIGO_COLS=['Código Actual','Codigo Actual','Código Anterior','Codigo Anterior'];
+
+  for(var ci=0;ci<CODIGO_COLS.length;ci++){
     for(var i=0;i<excelData.length;i++){
-      var vals=Object.values(excelData[i]);
-      for(var j=0;j<vals.length;j++){
-        if(String(vals[j]).trim().toLowerCase()===ql){
-          lg('ENCONTRADO (fallback) fila '+(i+5));
-          return{found:true,row:excelData[i],code:raw,matched:vals[j]};
+      var cellVal=String(excelData[i][CODIGO_COLS[ci]]||'').trim().toUpperCase();
+      if(cellVal===parsed.base){
+        var row=excelData[i];
+        var versionListado=String(row['Versión']||row['Version']||'').trim();
+        var versionLeida=parsed.version;
+
+        /* Comparar versiones */
+        var versionOk=false;
+        var versionMsg='';
+        if(!versionLeida){
+          /* No se pudo leer versión del código de barras */
+          versionOk=null; /* indeterminado */
+          versionMsg='No se pudo leer la versión del código de barras';
+        }else if(parseInt(versionLeida)===parseInt(versionListado)){
+          versionOk=true;
+          versionMsg='Versión '+versionLeida+' coincide con el listado';
+        }else{
+          versionOk=false;
+          versionMsg='Versión leída '+versionLeida+' ≠ Versión en listado '+versionListado;
         }
+
+        lg('Encontrado fila '+(i+5)+' | Ver listado: '+versionListado+' | Ok: '+versionOk);
+        return{
+          found:true,
+          codeOk: versionOk===true,
+          versionOk: versionOk,
+          row:row,
+          raw:raw,
+          base:parsed.base,
+          versionLeida:versionLeida,
+          versionListado:versionListado,
+          versionMsg:versionMsg,
+          col:CODIGO_COLS[ci]
+        };
       }
     }
   }
-  lg('NO encontrado: '+raw);
-  return{found:false,row:null,code:raw};
+  lg('NO encontrado: '+parsed.base);
+  return{found:false,row:null,raw:raw,base:parsed.base,versionLeida:parsed.version,versionListado:null};
+}
+
+/* ── MOSTRAR RESULTADO ── */
+function showResult(res){
+  curRes=res;
+  var ts=new Date().toLocaleString('es-CO',{dateStyle:'short',timeStyle:'short'});
+  curRes.ts=ts; curRes.tsLong=new Date().toLocaleString('es-CO');
+
+  var area=g('res');
+  var h='';
+
+  if(!res.found){
+    /* Código no existe en el listado */
+    h='<div class="res-fail"><span class="big">❌</span><h2>NO CUMPLE</h2>'
+      +'<p>Código <strong>'+res.base+'</strong> no encontrado en el listado maestro</p></div>'
+      +'<div class="card"><div class="card-h"><span class="ico">⚠️</span> Información</div><div class="card-b"><table>'
+      +'<tr><td>Código escaneado</td><td>'+res.raw+'</td></tr>'
+      +'<tr><td>Código buscado</td><td>'+res.base+'</td></tr>'
+      +'<tr><td>Versión leída</td><td>'+(res.versionLeida||'No detectada')+'</td></tr>'
+      +'<tr><td>Estado</td><td style="color:#b91c1c;font-weight:700">No encontrado en LM-0019</td></tr>'
+      +'<tr><td>Consultado</td><td>'+ts+'</td></tr>'
+      +'</table></div></div>';
+
+  }else if(res.versionOk===true){
+    /* Código encontrado Y versión correcta → EN CUMPLIMIENTO */
+    h='<div class="res-ok"><span class="big">✅</span><h2>EN CUMPLIMIENTO</h2>'
+      +'<p>Código <strong>'+res.base+'</strong> · Versión <strong>'+res.versionLeida+'</strong> correcta</p></div>'
+      +buildDetailCard(res,ts);
+
+  }else if(res.versionOk===false){
+    /* Código encontrado PERO versión incorrecta → HALLAZGO */
+    h='<div class="res-fail"><span class="big">⚠️</span><h2>HALLAZGO — VERSIÓN INCORRECTA</h2>'
+      +'<p>El documento existe pero la versión <strong>'+res.versionLeida+'</strong> no corresponde al listado (v'+res.versionListado+')</p></div>'
+      +buildDetailCard(res,ts);
+
+  }else{
+    /* Código encontrado pero no se pudo leer versión */
+    h='<div class="res-warn"><span class="big">⚠️</span><h2>CÓDIGO ENCONTRADO</h2>'
+      +'<p>No se pudo determinar la versión del código escaneado</p></div>'
+      +buildDetailCard(res,ts);
+  }
+
+  area.innerHTML=h;
+  show('act');
+  g('btn-save').disabled=false;
+  g('btn-save').innerHTML='<span>💾</span> Guardar en informe';
+  scanHist.unshift({raw:res.raw,base:res.base,found:res.found,ok:res.codeOk,ts:ts});
+  renderHist();
+  setTimeout(function(){area.scrollIntoView({behavior:'smooth',block:'start'});},120);
+}
+
+function buildDetailCard(res,ts){
+  var r=res.row;
+  var verClass=res.versionOk===true?'ver-ok':'ver-fail';
+  return '<div class="card"><div class="card-h"><span class="ico">📋</span> Detalle del documento</div><div class="card-b"><table>'
+    +'<tr><td>Código</td><td>'+res.base+'</td></tr>'
+    +'<tr><td>Descripción</td><td>'+(r['Descripción']||r['Descripcion']||'—')+'</td></tr>'
+    +'<tr><td>Versión leída</td><td class="'+verClass+'">'+(res.versionLeida||'No detectada')+'</td></tr>'
+    +'<tr><td>Versión listado</td><td class="'+verClass+'">'+(res.versionListado||'—')+'</td></tr>'
+    +'<tr><td>Verif. versión</td><td class="'+verClass+'">'+res.versionMsg+'</td></tr>'
+    +'<tr><td>Fecha de Vigencia</td><td>'+(r['Fecha de Vigencia']||'—')+'</td></tr>'
+    +'<tr><td>Fecha de Vencimiento</td><td>'+(r['Fecha de Vencimiento']||'—')+'</td></tr>'
+    +'<tr><td>Estado</td><td>'+(r['Estado']||'—')+'</td></tr>'
+    +'<tr><td>Consultado</td><td>'+ts+'</td></tr>'
+    +'</table></div></div>';
 }
 
 /* ── BUSCAR ── */
 function doBuscar(){
   if(!excelData.length){
-    el('warn-noexcel').style.display='block';
-    el('warn-noexcel').innerHTML='<h4>⏳ Listado no disponible</h4>El archivo LM-0019 aún se está cargando o hubo un error. Revisa la sección superior.';
+    show('warn-noexcel','block');
+    g('warn-noexcel').innerHTML='<h4>⏳ Listado no disponible</h4>El archivo aún se está cargando o hubo un error.';
     return;
   }
   hide('warn-noexcel');
-  var code=el('mc').value.trim();
+  var code=g('mc').value.trim();
   if(!code){alert('Escribe un código para buscar');return;}
-  lg('Búsqueda manual: "'+code+'"');
   showResult(searchCode(code));
-  el('mc').value='';
+  g('mc').value='';
+}
+g('btn-buscar').addEventListener('click',doBuscar);
+g('mc').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();doBuscar();}});
+
+/* ── GUARDAR ── */
+g('btn-save').addEventListener('click',function(){
+  if(!curRes) return;
+  saved.push(JSON.parse(JSON.stringify(curRes)));
+  renderSaved();
+  updateStats();
+  g('btn-save').disabled=true;
+  g('btn-save').innerHTML='<span>✅</span> Guardado';
+  lg('Guardado ('+saved.length+')');
+});
+g('btn-new').addEventListener('click',function(){
+  curRes=null; g('res').innerHTML=''; hide('act');
+  g('mc').value=''; window.scrollTo({top:0,behavior:'smooth'});
+});
+function removeRec(i){saved.splice(i,1);renderSaved();updateStats();}
+g('btn-clear').addEventListener('click',function(){
+  if(!saved.length) return;
+  if(confirm('¿Limpiar todos los registros del informe?')){saved=[];renderSaved();updateStats();}
+});
+
+function updateStats(){
+  var total=saved.length;
+  var ok=saved.filter(function(r){return r.found&&r.versionOk===true;}).length;
+  var fail=total-ok;
+  var pct=total?Math.round(ok/total*100):0;
+  if(total){
+    show('stats-wrap');
+    g('st-total').textContent=total;
+    g('st-ok').textContent=ok;
+    g('st-fail').textContent=fail;
+    g('st-pct').textContent=pct+'%';
+  }else{
+    hide('stats-wrap');
+  }
 }
 
-el('btn-buscar').addEventListener('click',doBuscar);
-el('mc').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();doBuscar();}});
-
-/* ── RESULTADO ── */
-function showResult(res){
-  curRes=res;
-  var ts=new Date().toLocaleString('es-CO',{dateStyle:'short',timeStyle:'short'});
-  curRes.ts=ts; curRes.tsLong=new Date().toLocaleString('es-CO');
-  var area=el('res');
+function renderSaved(){
+  if(!saved.length){hide('inf-card');return;}
+  show('inf-card');
+  g('inf-cnt').textContent=saved.length;
   var h='';
-  if(res.found){
-    var rows='';
-    if(res.matched&&res.matched.toLowerCase()!==res.code.toLowerCase())
-      rows+='<tr><td>Código escaneado</td><td>'+res.code+'</td></tr><tr><td>Código en listado</td><td>'+res.matched+'</td></tr>';
-    KEY_COLS.forEach(function(c){var v=res.row[c];if(v&&v!=='')rows+='<tr><td>'+c+'</td><td>'+v+'</td></tr>';});
-    Object.keys(res.row).forEach(function(c){if(KEY_COLS.indexOf(c)<0&&res.row[c]!=='')rows+='<tr><td>'+c+'</td><td>'+res.row[c]+'</td></tr>';});
-    rows+='<tr><td>Consultado</td><td>'+ts+'</td></tr>';
-    h='<div class="res-ok"><span class="big">✅</span><h2>EN CUMPLIMIENTO</h2><p>Código <strong>'+res.code+'</strong> encontrado en LM-0019</p></div>'
-      +'<div class="card"><div class="card-h"><span>📋</span> Detalle del documento</div><div class="card-b"><table>'+rows+'</table></div></div>';
-  }else{
-    h='<div class="res-fail"><span class="big">❌</span><h2>NO CUMPLE</h2><p>Código <strong>'+res.code+'</strong> no encontrado en LM-0019</p></div>'
-      +'<div class="card"><div class="card-h"><span>⚠️</span> Información</div><div class="card-b"><table>'
-      +'<tr><td>Código buscado</td><td>'+res.code+'</td></tr>'
-      +'<tr><td>Estado</td><td style="color:#b91c1c;font-weight:700">No encontrado en el listado maestro</td></tr>'
-      +'<tr><td>Consultado</td><td>'+ts+'</td></tr>'
-      +'</table></div></div>';
-  }
-  area.innerHTML=h;
-  show('act');
-  el('btn-save').disabled=false;
-  el('btn-save').innerHTML='<span>💾</span> Guardar en informe';
-  scanHist.unshift({code:res.code,found:res.found,ts:ts});
-  renderHist();
-  setTimeout(function(){area.scrollIntoView({behavior:'smooth',block:'start'});},120);
+  saved.forEach(function(r,i){
+    var label=!r.found?'No encontrado':r.versionOk===true?'Cumple':r.versionOk===false?'Hallazgo':'Sin versión';
+    var cls=!r.found||r.versionOk===false?'bdg-fail':r.versionOk===true?'bdg-ok':'bdg-warn';
+    var desc=r.row?(r.row['Descripción']||r.row['Descripcion']||''):'';
+    h+='<div class="si"><button class="rm" onclick="removeRec('+i+')">✕</button>'
+      +'<h4>'+r.base+' <span class="bdg '+cls+'">'+label+'</span></h4>'
+      +'<p>V.leída: '+(r.versionLeida||'?')+' | V.listado: '+(r.versionListado||'?')+' | '+r.ts+'</p>'
+      +(desc?'<p style="margin-top:4px">'+String(desc).substring(0,60)+'</p>':'')
+      +'</div>';
+  });
+  g('inf-list').innerHTML=h;
+}
+
+function renderHist(){
+  if(!scanHist.length) return;
+  show('hist-card');
+  var h='';
+  scanHist.slice(0,20).forEach(function(x){
+    var cls=!x.found?'bdg-fail':x.ok?'bdg-ok':'bdg-fail';
+    var lbl=!x.found?'No encontrado':x.ok?'Cumple':'Hallazgo';
+    h+='<div class="hi"><span class="hi-code">'+x.base+'</span>'
+      +'<span class="hi-ts">'+x.ts+'</span>'
+      +'<span class="bdg '+cls+'">'+lbl+'</span></div>';
+  });
+  g('hist-body').innerHTML=h;
 }
 
 /* ── CÁMARA ── */
-el('btn-cam').addEventListener('click',function(){
+g('btn-cam').addEventListener('click',function(){
   hide('perm-android'); hide('perm-ios');
-  if(!excelData.length){
-    el('warn-noexcel').style.display='block';
-    el('warn-noexcel').innerHTML='<h4>⏳ Listado no disponible</h4>Espera a que cargue el listado o revisa el error en la sección superior.';
-    return;
-  }
+  if(!excelData.length){show('warn-noexcel','block');return;}
   hide('warn-noexcel');
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
     alert('Tu navegador no soporta cámara.\niPhone/iPad: usa Safari.\nAndroid: usa Chrome.');
     return;
   }
+  g('btn-cam').disabled=true;
   lg('Solicitando cámara...');
-  el('btn-cam').disabled=true;
   navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false})
     .then(function(stream){
       lg('Cámara OK');
       camStream=stream;
-      var vid=el('vid');
-      vid.srcObject=stream; vid.play().catch(function(){});
-      show('cam-wrap'); hide('btn-cam'); show('btn-stop');
-      el('btn-stop').style.display='flex';
+      var vid=g('vid'); vid.srcObject=stream; vid.play().catch(function(){});
+      show('cam-wrap'); hide('btn-cam'); show('btn-stop'); g('btn-stop').style.display='flex';
       if(typeof BarcodeDetector!=='undefined'){
-        lg('BarcodeDetector disponible — escaneo automático activo');
+        lg('Escaneo automático activo');
         var det=new BarcodeDetector({formats:['code_128','ean_13','ean_8','code_39','qr_code','upc_a','upc_e','itf','codabar','data_matrix']});
         scanInterval=setInterval(function(){
           if(!camStream||vid.readyState<2) return;
@@ -497,168 +560,253 @@ el('btn-cam').addEventListener('click',function(){
         },500);
       }else{
         lg('BarcodeDetector no disponible — escribe el código manualmente');
-        alert('Cámara abierta.\n\nTu versión de navegador no soporta escaneo automático.\nLee el código y escríbelo en el campo de texto.\n\n(Requiere iOS 17.4+ o Android Chrome actualizado)');
+        alert('Cámara abierta.\nEscaneo automático no disponible en tu versión.\nLee el código y escríbelo manualmente.\n\n(Requiere iOS 17.4+ o Android Chrome actualizado)');
       }
     })
     .catch(function(err){
       lg('ERROR cámara: '+err.name);
-      el('btn-cam').disabled=false;
+      g('btn-cam').disabled=false;
       if(err.name==='NotAllowedError'||err.name==='PermissionDeniedError'){
-        if(isAndroid){show('perm-android','block');}
-        else{show('perm-ios','block');}
+        if(isAndroid){show('perm-android','block');}else{show('perm-ios','block');}
       }else if(err.name==='NotFoundError'){
-        alert('No se encontró cámara en este dispositivo.');
+        alert('No se encontró cámara.');
       }else{
         alert('Error: '+err.name+'\n'+err.message);
       }
     });
 });
-
-el('btn-stop').addEventListener('click',stopCam);
+g('btn-stop').addEventListener('click',stopCam);
 function stopCam(){
   if(scanInterval){clearInterval(scanInterval);scanInterval=null;}
   if(camStream){camStream.getTracks().forEach(function(t){t.stop();});camStream=null;}
-  el('vid').srcObject=null;
+  g('vid').srcObject=null;
   hide('cam-wrap'); show('btn-cam'); hide('btn-stop');
-  el('btn-cam').disabled=false;
-  lg('Cámara detenida');
+  g('btn-cam').disabled=false; lg('Cámara detenida');
 }
 
-/* ── GUARDAR / HISTORIAL ── */
-el('btn-save').addEventListener('click',function(){
-  if(!curRes) return;
-  saved.push(JSON.parse(JSON.stringify(curRes)));
-  renderSaved();
-  el('btn-save').disabled=true;
-  el('btn-save').innerHTML='<span>✅</span> Guardado';
-  lg('Guardado ('+saved.length+' total)');
-});
-el('btn-new').addEventListener('click',function(){
-  curRes=null; el('res').innerHTML=''; hide('act');
-  el('mc').value=''; window.scrollTo({top:0,behavior:'smooth'}); lg('Nueva consulta');
-});
-function removeRec(i){saved.splice(i,1);renderSaved();}
-el('btn-clear').addEventListener('click',function(){
-  if(!saved.length) return;
-  if(confirm('¿Limpiar todos los registros del informe?')){saved=[];renderSaved();}
-});
-function renderSaved(){
-  if(!saved.length){hide('inf-card');return;}
-  show('inf-card');
-  el('inf-cnt').textContent=saved.length;
-  var h='';
-  saved.forEach(function(r,i){
-    var desc=r.row?(r.row['Descripción']||r.row['Descripcion']||''):'';
-    h+='<div class="si"><button class="rm" onclick="removeRec('+i+')">✕</button>'
-      +'<h4>'+r.code+' <span class="bdg '+(r.found?'bdg-ok':'bdg-fail')+'">'+(r.found?'Cumple':'No cumple')+'</span></h4>'
-      +'<p>'+r.ts+(desc?' · '+String(desc).substring(0,60)+(desc.length>60?'...':''):'')+'</p></div>';
-  });
-  el('inf-list').innerHTML=h;
-}
-function renderHist(){
-  if(!scanHist.length) return;
-  show('hist-card');
-  var h='';
-  scanHist.slice(0,20).forEach(function(x){
-    h+='<div class="hi"><span class="hi-code">'+x.code+'</span><span class="hi-ts">'+x.ts+'</span>'
-      +'<span class="bdg '+(x.found?'bdg-ok':'bdg-fail')+'">'+(x.found?'Cumple':'No cumple')+'</span></div>';
-  });
-  el('hist-body').innerHTML=h;
+/* ── CARGA EXCEL AUTOMÁTICA ── */
+function loadExcelFromURL(){
+  lg('Descargando Excel desde GitHub...');
+  setExcelStatus('loading','Cargando listado maestro...','Descargando LISTADO MAESTRO DE DOCUMENTOS.xlsx');
+  function doFetch(){
+    fetch(EXCEL_URL)
+      .then(function(r){
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        return r.arrayBuffer();
+      })
+      .then(function(buf){
+        processBuffer(buf);
+      })
+      .catch(function(err){
+        lg('ERROR descarga: '+err.message);
+        setExcelStatus('err','No se pudo cargar automáticamente',err.message+' — Usa la carga manual abajo');
+        show('manual-load-wrap');
+        setupManualLoad();
+      });
+  }
+  waitLib(function(){return typeof XLSX!=='undefined';},doFetch);
 }
 
-/* ── PDF ── */
-el('btn-pdf').addEventListener('click',genPDF);
-el('btn-mail').addEventListener('click',function(){
+function processBuffer(buf){
+  try{
+    var wb=XLSX.read(new Uint8Array(buf),{type:'array'});
+    lg('Hojas: '+wb.SheetNames.join(', '));
+    var ws=wb.Sheets[wb.SheetNames[0]];
+    var raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+    lg('Filas: '+raw.length);
+    var hdrs=(raw[3]||[]).map(function(h){return String(h||'').trim();});
+    lg('Cols fila 4: '+hdrs.filter(Boolean).slice(0,6).join(' | '));
+    var data=[];
+    for(var i=4;i<raw.length;i++){
+      var row=raw[i]||[];
+      if(row.every(function(c){return c===''||c===null||c===undefined;}))continue;
+      var obj={};
+      hdrs.forEach(function(h,j){if(h)obj[h]=String(row[j]!==undefined?row[j]:'').trim();});
+      data.push(obj);
+    }
+    if(!data.length) throw new Error('Sin datos desde fila 5');
+    excelData=data;
+    lg('OK: '+data.length+' documentos');
+    setExcelStatus('ok','LM-0019 listo · '+data.length+' documentos','Cargado correctamente — versiones verificables');
+    hide('warn-noexcel');
+  }catch(err){
+    lg('ERROR procesar: '+err.message);
+    setExcelStatus('err','Error procesando el archivo',err.message);
+    show('manual-load-wrap');
+    setupManualLoad();
+  }
+}
+
+function setupManualLoad(){
+  var inp=g('fi');
+  if(!inp||inp._ready) return;
+  inp._ready=true;
+  inp.addEventListener('change',function(e){
+    var file=e.target.files&&e.target.files[0];
+    if(!file) return;
+    lg('Manual: '+file.name);
+    var reader=new FileReader();
+    reader.onload=function(ev){processBuffer(ev.target.result);};
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+/* ══════════════════════════════════════
+   GENERAR PDF — INFORME DE INSPECCIÓN
+══════════════════════════════════════ */
+g('btn-pdf').addEventListener('click',genPDF);
+g('btn-mail').addEventListener('click',function(){
   var recs=saved.length?saved:(curRes?[curRes]:[]);
   if(!recs.length){alert('No hay registros guardados');return;}
   genPDF();
   var now=new Date().toLocaleString('es-CO');
-  var okc=recs.filter(function(r){return r.found;}).length;
-  var subj='Informe LM-0019 | '+recs.length+' codigos | '+now;
-  var body='INFORME DE VERIFICACION - GRUPO PROCAPS\n================================\n\n'
-    +'Fecha: '+now+'\nTotal: '+recs.length+'\nCumplen: '+okc+'\nNo cumplen: '+(recs.length-okc)+'\n\nDETALLE:\n';
+  var inspector=g('inspector').value.trim()||'No especificado';
+  var area=g('area').value.trim()||'No especificada';
+  var total=recs.length;
+  var ok=recs.filter(function(r){return r.found&&r.versionOk===true;}).length;
+  var fail=total-ok;
+  var pct=total?Math.round(ok/total*100):0;
+  var subj='Informe de Inspección LM-0019 | '+area+' | '+now;
+  var body='INFORME DE INSPECCIÓN - GRUPO PROCAPS\n================================\n\n'
+    +'Inspector: '+inspector+'\nÁrea: '+area+'\nFecha: '+now+'\n\n'
+    +'RESULTADOS:\nDocumentos leídos  : '+total+'\nCumplen            : '+ok
+    +'\nHallazgos          : '+fail+'\nCumplimiento       : '+pct+'%\n\nDETALLE:\n';
   recs.forEach(function(r,i){
-    body+='\n['+(i+1)+'] '+r.code+' — '+(r.found?'EN CUMPLIMIENTO':'NO CUMPLE')+'\n    Fecha: '+(r.tsLong||r.ts)+'\n';
-    if(r.found&&r.row){
-      var d=r.row['Descripción']||''; if(d) body+='    Desc: '+d+'\n';
-      var e=r.row['Estado']||''; if(e) body+='    Estado: '+e+'\n';
-    }
+    var lbl=!r.found?'NO ENCONTRADO':r.versionOk===true?'CUMPLE':'HALLAZGO';
+    body+='\n['+(i+1)+'] '+r.base+' — '+lbl+'\n'
+      +'    V.leída: '+(r.versionLeida||'?')+' | V.listado: '+(r.versionListado||'?')+'\n'
+      +'    Fecha: '+(r.tsLong||r.ts)+'\n';
   });
   body+='\n================================\nADJUNTA el PDF descargado a este correo.\nApp Verificadora LM-0019 - Grupo Procaps';
   setTimeout(function(){window.location.href='mailto:?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body);},800);
 });
+g('btn-clear').addEventListener('click',function(){
+  if(!saved.length) return;
+  if(confirm('¿Limpiar todos los registros?')){saved=[];renderSaved();updateStats();}
+});
 
 function genPDF(){
-  if(typeof window.jspdf==='undefined'){
-    waitLib(function(){return typeof window.jspdf!=='undefined';},genPDF);
-    return;
-  }
+  if(typeof window.jspdf==='undefined'){waitLib(function(){return typeof window.jspdf!=='undefined';},genPDF);return;}
   var recs=saved.length?saved:(curRes?[curRes]:[]);
   if(!recs.length){alert('No hay registros para el PDF');return;}
+
+  var inspector=g('inspector').value.trim()||'No especificado';
+  var areaInsp=g('area').value.trim()||'No especificada';
+  var now=new Date().toLocaleString('es-CO');
+  var total=recs.length;
+  var ok=recs.filter(function(r){return r.found&&r.versionOk===true;}).length;
+  var fail=total-ok;
+  var pct=total?Math.round(ok/total*100):0;
+
   var jsPDF=window.jspdf.jsPDF;
   var doc=new jsPDF({unit:'mm',format:'a4'});
-  var now=new Date().toLocaleString('es-CO');
-  doc.setFillColor(26,58,92);doc.rect(0,0,210,30,'F');
-  doc.setFillColor(15,110,86);doc.rect(0,26,210,6,'F');
+
+  /* ── ENCABEZADO ── */
+  doc.setFillColor(26,58,92); doc.rect(0,0,210,38,'F');
+  doc.setFillColor(15,110,86); doc.rect(0,34,210,6,'F');
   doc.setTextColor(255,255,255);
-  doc.setFontSize(16);doc.setFont('helvetica','bold');
-  doc.text('INFORME DE VERIFICACION LM-0019',14,17);
-  doc.setFontSize(8.5);doc.setFont('helvetica','normal');
-  doc.text('Grupo Procaps  |  Listado Maestro  |  '+now,14,24);
-  var y=40;doc.setTextColor(20,20,20);
-  var total=recs.length,okc=recs.filter(function(r){return r.found;}).length;
-  doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text('RESUMEN GENERAL',14,y);y+=6;
-  doc.setDrawColor(210,210,210);doc.line(14,y,196,y);y+=7;
-  doc.setFont('helvetica','normal');doc.setFontSize(10);
-  doc.text('Total verificados: '+total,14,y);y+=6;
-  doc.setTextColor(6,95,70);doc.text('En cumplimiento: '+okc,14,y);y+=6;
-  doc.setTextColor(153,27,27);doc.text('No cumplen: '+(total-okc),14,y);y+=12;
+  doc.setFontSize(17); doc.setFont('helvetica','bold');
+  doc.text('INFORME DE INSPECCIÓN',14,14);
+  doc.setFontSize(11); doc.setFont('helvetica','normal');
+  doc.text('Listado Maestro de Documentos LM-0019  ·  Grupo Procaps',14,22);
+  doc.setFontSize(9);
+  doc.text('Inspector: '+inspector+'   |   Área: '+areaInsp+'   |   Fecha: '+now,14,30);
+
+  /* ── RESUMEN ESTADÍSTICO ── */
+  var y=48;
   doc.setTextColor(20,20,20);
-  recs.forEach(function(r,idx){
-    if(y>248){doc.addPage();y=20;}
-    var ok=r.found;
-    if(ok){doc.setFillColor(236,253,245);doc.setDrawColor(5,150,105);}
-    else{doc.setFillColor(254,242,242);doc.setDrawColor(220,38,38);}
-    doc.roundedRect(14,y,182,20,3,3,'FD');
-    doc.setFont('helvetica','bold');doc.setFontSize(12);
-    doc.setTextColor(ok?6:153,ok?95:27,ok?70:27);
-    doc.text((ok?'EN CUMPLIMIENTO':'NO CUMPLE')+'  —  '+r.code,105,y+13,{align:'center'});
-    y+=26;doc.setTextColor(20,20,20);
-    [['Código:',r.code],['Fecha:',r.tsLong||r.ts],['Estado:',ok?'Encontrado en LM-0019':'NO encontrado']].forEach(function(row){
-      if(y>272){doc.addPage();y=20;}
-      doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text(row[0],14,y);
-      doc.setFont('helvetica','normal');var ln=doc.splitTextToSize(row[1],120);doc.text(ln,48,y);y+=ln.length*6+1;
-    });
-    if(ok&&r.row){
-      y+=2;doc.setFont('helvetica','bold');doc.setFontSize(9.5);doc.text('Detalle:',14,y);y+=5;
-      var printed={};
-      KEY_COLS.forEach(function(c){
-        var v=r.row[c];
-        if(v&&v!==''){if(y>272){doc.addPage();y=20;}
-          doc.setFont('helvetica','bold');doc.text(c+':',18,y);
-          doc.setFont('helvetica','normal');var ln=doc.splitTextToSize(v,112);doc.text(ln,76,y);
-          y+=ln.length*5.2+1;printed[c]=true;}
-      });
-      Object.entries(r.row).forEach(function(e){
-        if(!printed[e[0]]&&e[1]&&e[1]!==''){if(y>272){doc.addPage();y=20;}
-          doc.setFont('helvetica','bold');doc.text(e[0]+':',18,y);
-          doc.setFont('helvetica','normal');var ln=doc.splitTextToSize(e[1],112);doc.text(ln,76,y);
-          y+=ln.length*5.2+1;}
-      });
-    }
-    y+=10;
-    if(idx<recs.length-1){doc.setDrawColor(225,225,225);doc.line(14,y-5,196,y-5);}
+  doc.setFont('helvetica','bold'); doc.setFontSize(11);
+  doc.text('RESUMEN DE LA INSPECCIÓN',14,y); y+=6;
+  doc.setDrawColor(210,210,210); doc.line(14,y,196,y); y+=7;
+
+  /* Cajas de estadísticas */
+  var boxes=[
+    {label:'Documentos leídos',val:String(total),color:[26,58,92]},
+    {label:'En cumplimiento',val:String(ok),color:[6,95,70]},
+    {label:'Hallazgos',val:String(fail),color:[153,27,27]},
+    {label:'% Cumplimiento',val:pct+'%',color:[91,33,182]}
+  ];
+  var bw=42, bh=18, bx=14;
+  boxes.forEach(function(b){
+    doc.setFillColor(b.color[0],b.color[1],b.color[2]);
+    doc.roundedRect(bx,y,bw,bh,2,2,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFont('helvetica','bold'); doc.setFontSize(14);
+    doc.text(b.val,bx+bw/2,y+10,{align:'center'});
+    doc.setFontSize(7); doc.setFont('helvetica','normal');
+    doc.text(b.label,bx+bw/2,y+15,{align:'center'});
+    bx+=bw+4;
   });
+  y+=bh+10;
+
+  /* ── DETALLE POR DOCUMENTO ── */
+  doc.setTextColor(20,20,20);
+  doc.setFont('helvetica','bold'); doc.setFontSize(11);
+  doc.text('DETALLE DE DOCUMENTOS INSPECCIONADOS',14,y); y+=6;
+  doc.setDrawColor(210,210,210); doc.line(14,y,196,y); y+=7;
+
+  recs.forEach(function(r,idx){
+    if(y>255){doc.addPage();y=20;}
+
+    var cumple=r.found&&r.versionOk===true;
+    var hallazgo=r.found&&r.versionOk===false;
+    var noEncontrado=!r.found;
+
+    /* Franja de estado */
+    if(cumple){doc.setFillColor(236,253,245);doc.setDrawColor(5,150,105);}
+    else{doc.setFillColor(254,242,242);doc.setDrawColor(220,38,38);}
+    doc.roundedRect(14,y,182,16,2,2,'FD');
+    doc.setFont('helvetica','bold'); doc.setFontSize(11);
+    doc.setTextColor(cumple?6:153, cumple?95:27, cumple?70:27);
+    var estado=cumple?'✓ CUMPLE':hallazgo?'✗ HALLAZGO — VERSIÓN INCORRECTA':'✗ NO ENCONTRADO EN LISTADO';
+    doc.text(estado+'   |   '+r.base,16,y+11);
+    y+=22;
+
+    /* Tabla de datos */
+    doc.setTextColor(20,20,20); doc.setFontSize(9.5);
+    var filas=[
+      ['Código:',r.base],
+      ['Código escaneado:',r.raw||r.base],
+      ['Descripción:',r.row?(r.row['Descripción']||r.row['Descripcion']||'—'):'—'],
+      ['Versión leída:',r.versionLeida||'No detectada'],
+      ['Versión listado:',r.versionListado||'—'],
+      ['Verificación versión:',r.versionMsg||'—'],
+      ['Estado documento:',r.row?(r.row['Estado']||'—'):'—'],
+      ['Fecha de Vigencia:',r.row?(r.row['Fecha de Vigencia']||'—'):'—'],
+      ['Fecha de Vencimiento:',r.row?(r.row['Fecha de Vencimiento']||'—'):'—'],
+      ['Fecha consulta:',r.tsLong||r.ts],
+    ];
+    filas.forEach(function(fila){
+      if(y>272){doc.addPage();y=20;}
+      doc.setFont('helvetica','bold'); doc.text(fila[0],18,y);
+      doc.setFont('helvetica','normal');
+      /* Colorear versiones si hay hallazgo */
+      if((fila[0]==='Versión leída:'||fila[0]==='Versión listado:')&&hallazgo){
+        doc.setTextColor(180,30,30);
+      }else{
+        doc.setTextColor(20,20,20);
+      }
+      var ln=doc.splitTextToSize(String(fila[1]),118);
+      doc.text(ln,72,y); y+=ln.length*5.5+1;
+      doc.setTextColor(20,20,20);
+    });
+    y+=8;
+    if(idx<recs.length-1){doc.setDrawColor(225,225,225);doc.line(14,y-4,196,y-4);}
+  });
+
+  /* ── PIE DE PÁGINA ── */
   var ph=doc.internal.pageSize.height;
-  doc.setFillColor(26,58,92);doc.rect(0,ph-14,210,14,'F');
-  doc.setTextColor(255,255,255);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
-  doc.text('Generado: '+now+'  |  Grupo Procaps  |  LM-0019  |  '+total+' codigo(s)',105,ph-5.5,{align:'center'});
-  doc.save('Informe_LM0019_'+Date.now()+'.pdf');
-  lg('PDF generado');
+  doc.setFillColor(26,58,92); doc.rect(0,ph-14,210,14,'F');
+  doc.setTextColor(255,255,255); doc.setFontSize(7.5); doc.setFont('helvetica','normal');
+  doc.text('Inspector: '+inspector+'  |  Área: '+areaInsp+'  |  '+now+'  |  LM-0019  |  Cumplimiento: '+pct+'%',105,ph-5.5,{align:'center'});
+
+  var fn='Informe_Inspeccion_LM0019_'+Date.now()+'.pdf';
+  doc.save(fn);
+  lg('PDF generado: '+fn);
 }
 
-/* ── ARRANQUE: cargar Excel automáticamente ── */
-window.addEventListener('load', function(){
+/* ── ARRANQUE ── */
+window.addEventListener('load',function(){
   lg('App iniciada | '+(isAndroid?'Android':isIOS?'iOS':'Escritorio/Tablet'));
   loadExcelFromURL();
 });
