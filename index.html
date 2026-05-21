@@ -253,57 +253,93 @@ function setExcelStatus(type,title,sub){
 function waitLib(check,cb,n){n=n||0;if(n>50)return;if(check()){cb();}else{setTimeout(function(){waitLib(check,cb,n+1);},300);}}
 
 /* ══ PARSEO DEL CÓDIGO ══
-   Soporta todos los formatos:
-   INST-0001-16-183  → base=INST-0001  ver=16
-   INST-0001-16 183  → base=INST-0001  ver=16
-   INST-0001-16      → base=INST-0001  ver=16
-   INST'0058-11      → base=INST-0058  ver=11
-   MAN-0033          → base=MAN-0033   ver=null
+   Todos los formatos posibles:
+   INST-0001-16-183  → código: INST-0001  versión: 16  (resto ignorado)
+   INST-0001-16 183  → código: INST-0001  versión: 16
+   SOP-0089-20       → código: SOP-0089   versión: 20
+   SOP-0089 20       → código: SOP-0089   versión: 20
+   SOP'0089-20       → código: SOP-0089   versión: 20  (comilla interna)
 */
 function parseCode(raw){
-  var s=raw.trim()
-    .replace(/'/g,'-')   // comilla → guión
-    .replace(/[^\w\d\-\s]/g,'')  // limpiar caracteres raros
-    .replace(/\s+/g,' ')
-    .toUpperCase();
-  lg('RAW escaneado: "'+raw+'"  Normalizado: "'+s+'"');
-
-  // Patrón 1: LETRAS-NUMEROS-VER-... (guión como separador de versión)
-  var m1=s.match(/^([A-Z]{2,}-\d{4})-(\d+)/);
-  if(m1) return{base:m1[1],version:m1[2],raw:raw};
-
-  // Patrón 2: LETRAS-NUMEROS VER... (espacio como separador de versión)
-  var m2=s.match(/^([A-Z]{2,}-\d{4})\s+(\d+)/);
-  if(m2) return{base:m2[1],version:m2[2],raw:raw};
-
-  // Patrón 3: solo código sin versión
-  var m3=s.match(/^([A-Z]{2,}-\d{4})/);
-  if(m3) return{base:m3[1],version:null,raw:raw};
-
-  return{base:s,version:null,raw:raw};
+  var s=raw.trim().toUpperCase();
+  lg('RAW: "'+raw+'"');
+  /* Regex maestro:
+     Gr1: TIPO (letras)  Gr2: NUMERO (digitos)  Gr3: VERSION (opcional) */
+  var m=s.match(/^([A-Z]{2,5})['\-](\d{3,6})(?:['\-\s](\d+))?/);
+  if(m){
+    var base=m[1]+'-'+m[2];
+    var ver=m[3]||null;
+    lg('Parseado: base="'+base+'" ver="'+ver+'"');
+    return{base:base, version:ver, raw:raw};
+  }
+  lg('No parseado: "'+s+'"');
+  return{base:s, version:null, raw:raw};
 }
 
 /* ══ BÚSQUEDA ══ */
 function searchCode(raw){
   var p=parseCode(raw);
-  lg('Buscando base="'+p.base+'" ver="'+p.version+'"');
+
+  /* Generar todas las variantes del código base a buscar:
+     SOP-0089, SOP'0089, sop-0089, etc. */
+  var baseVariants=[p.base];
+
+  /* Agregar versión con comilla si el base tiene guión y viceversa */
+  baseVariants.push(p.base.replace(/-/g,"'"));
+  baseVariants.push(p.base.replace(/'/g,'-'));
+  /* Quitar duplicados */
+  baseVariants=baseVariants.filter(function(v,i,a){return a.indexOf(v)===i;});
+  lg('Variantes a buscar: '+baseVariants.join(' | ')+' | ver="'+p.version+'"');
+
   var COLS=['Código Actual','Codigo Actual','Código Anterior','Codigo Anterior'];
-  for(var ci=0;ci<COLS.length;ci++){
+
+  for(var vi=0;vi<baseVariants.length;vi++){
+    var bv=baseVariants[vi].toUpperCase();
+    for(var ci=0;ci<COLS.length;ci++){
+      for(var i=0;i<excelData.length;i++){
+        var cv=String(excelData[i][COLS[ci]]||'').trim().toUpperCase();
+        if(cv===bv){
+          var row=excelData[i];
+          var vl=String(row['Versión']||row['Version']||'').trim();
+          var vok=null,vmsg='';
+          if(!p.version){
+            vok=null;vmsg='No se detectó versión en el código de barras';
+          }else if(parseInt(p.version)===parseInt(vl)){
+            vok=true;vmsg='Versión '+p.version+' coincide con el listado ✓';
+          }else{
+            vok=false;vmsg='Versión leída '+p.version+' ≠ versión en listado '+vl;
+          }
+          lg('ENCONTRADO col="'+COLS[ci]+'" fila='+(i+5)+' vListado='+vl+' vOk='+vok);
+          return{
+            found:true, codeOk:vok===true, versionOk:vok,
+            row:row, raw:raw, base:p.base, baseDisplay:cv,
+            versionLeida:p.version, versionListado:vl, versionMsg:vmsg
+          };
+        }
+      }
+    }
+    /* Búsqueda fallback en todas las columnas */
     for(var i=0;i<excelData.length;i++){
-      var cv=String(excelData[i][COLS[ci]]||'').trim().toUpperCase();
-      if(cv===p.base){
-        var row=excelData[i];
-        var vl=String(row['Versión']||row['Version']||'').trim();
-        var vok=null,vmsg='';
-        if(!p.version){vok=null;vmsg='No se detectó versión en el código de barras';}
-        else if(parseInt(p.version)===parseInt(vl)){vok=true;vmsg='Versión '+p.version+' coincide ✓';}
-        else{vok=false;vmsg='Versión leída '+p.version+' ≠ versión listado '+vl;}
-        lg('ENCONTRADO fila '+(i+5)+' | vListado='+vl+' | vOk='+vok);
-        return{found:true,codeOk:vok===true,versionOk:vok,row:row,raw:raw,base:p.base,versionLeida:p.version,versionListado:vl,versionMsg:vmsg};
+      var vals=Object.values(excelData[i]);
+      for(var j=0;j<vals.length;j++){
+        if(String(vals[j]).trim().toUpperCase()===bv){
+          var row=excelData[i];
+          var vl=String(row['Versión']||row['Version']||'').trim();
+          var vok=null,vmsg='';
+          if(!p.version){vok=null;vmsg='No se detectó versión';}
+          else if(parseInt(p.version)===parseInt(vl)){vok=true;vmsg='Versión '+p.version+' coincide ✓';}
+          else{vok=false;vmsg='Versión leída '+p.version+' ≠ versión listado '+vl;}
+          lg('ENCONTRADO fallback fila='+(i+5)+' vOk='+vok);
+          return{
+            found:true, codeOk:vok===true, versionOk:vok,
+            row:row, raw:raw, base:p.base, baseDisplay:String(vals[j]).trim(),
+            versionLeida:p.version, versionListado:vl, versionMsg:vmsg
+          };
+        }
       }
     }
   }
-  lg('NO encontrado: '+p.base);
+  lg('NO encontrado. Variantes probadas: '+baseVariants.join(', '));
   return{found:false,row:null,raw:raw,base:p.base,versionLeida:p.version,versionListado:null};
 }
 
