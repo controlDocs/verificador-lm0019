@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Verificador LM-0019 · Grupo Procaps</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;padding-bottom:60px;font-size:16px;}
+/* TABLET: centrar contenido con más espacio */
+.wrap{padding:14px;max-width:680px;margin:0 auto;}
+.hdr{background:#1a3a5c;padding:16px 20px;display:flex;align-items:center;gap:14px;}
+.hdr-ico{width:46px;height:46px;background:rgba(255,255,255,.18);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
+.hdr h1{font-size:19px;font-weight:700;color:#fff;}
+.hdr p{font-size:12px;color:rgba(255,255,255,.72);margin-top:2px;}
+.card{background:#fff;border-radius:14px;border:1px solid #e5e7eb;margin-bottom:14px;overflow:hidden;}
+.card-h{background:#f9fafb;border-bottom:1px solid #e5e7eb;padding:12px 16px;font-size:13px;font-weight:700;color:#6b7280;display:flex;align-items:center;gap:8px;}
+.card-h span{font-size:18px;}
+.card-b{padding:14px;}
+/* FILE INPUT */
+.file-zone{border:2px solid #3b82f6;border-radius:10px;background:#eff6ff;padding:16px;display:flex;flex-direction:column;gap:12px;}
+.file-top{display:flex;align-items:center;gap:14px;}
+.file-ico{width:50px;height:50px;background:#1a3a5c;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;}
+.file-txt h3{font-size:15px;font-weight:700;color:#1e40af;}
+.file-txt p{font-size:12px;color:#6b7280;margin-top:3px;}
+input[type=file]{display:block;width:100%;padding:13px 14px;border-radius:10px;border:none;background:#1a3a5c;color:#fff;font-size:15px;font-weight:600;cursor:pointer;-webkit-appearance:none;}
+input[type=file]::-webkit-file-upload-button{background:#1a3a5c;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-right:10px;}
+input[type=file]::file-selector-button{background:#1a3a5c;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-right:10px;}
+/* ALERTS */
+.alert{display:none;border-radius:10px;padding:12px 14px;font-size:13px;margin-top:10px;line-height:1.5;}
+.alert-ok{background:#ecfdf5;border:1.5px solid #059669;color:#065f46;}
+.alert-err{background:#fef2f2;border:1.5px solid #dc2626;color:#991b1b;}
+.alert-warn{background:#fffbeb;border:1.5px solid #d97706;color:#92400e;}
+.alert h4{font-size:14px;font-weight:700;margin-bottom:3px;}
+/* INPUTS */
+.inp{width:100%;padding:14px;border-radius:10px;border:1.5px solid #d1d5db;font-size:16px;background:#fff;color:#111;-webkit-appearance:none;appearance:none;outline:none;}
+.inp:focus{border-color:#1a3a5c;}
+/* BUTTONS */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:10px;font-size:15px;font-weight:700;border:none;cursor:pointer;color:#fff;-webkit-appearance:none;appearance:none;transition:opacity .15s;}
+.btn:active{opacity:.82;}
+.btn:disabled{opacity:.38;pointer-events:none;}
+.btn span.ico{font-size:20px;}
+.btn-blue{background:#1a3a5c;}
+.btn-green{background:#0f6e56;}
+.btn-amber{background:#b45309;}
+.btn-purple{background:#5b21b6;}
+.btn-pink{background:#9d174d;}
+.btn-gray{background:#4b5563;}
+.btn-red{background:#b91c1c;}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+/* TABLET: 3 columnas para botones de acción */
+@media(min-width:600px){.btn-row.three{grid-template-columns:1fr 1fr 1fr;}}
+/* CAMERA */
+.cam-wrap{display:none;margin-bottom:12px;border-radius:10px;overflow:hidden;background:#000;position:relative;}
+video{width:100%;display:block;max-height:320px;object-fit:cover;}
+.cam-hint{position:absolute;bottom:10px;left:0;right:0;text-align:center;color:rgba(255,255,255,.9);font-size:13px;font-weight:500;pointer-events:none;}
+.cam-frame{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+.cam-box{width:220px;height:150px;border:2.5px solid #00e599;border-radius:10px;position:relative;}
+.c{position:absolute;width:24px;height:24px;border-color:#fff;border-style:solid;}
+.c-tl{top:-2px;left:-2px;border-width:4px 0 0 4px;border-radius:4px 0 0 0;}
+.c-tr{top:-2px;right:-2px;border-width:4px 4px 0 0;border-radius:0 4px 0 0;}
+.c-bl{bottom:-2px;left:-2px;border-width:0 0 4px 4px;border-radius:0 0 0 4px;}
+.c-br{bottom:-2px;right:-2px;border-width:0 4px 4px 0;border-radius:0 0 4px 0;}
+.scan-line{position:absolute;left:8px;right:8px;height:2.5px;background:linear-gradient(90deg,transparent,#00e599,transparent);animation:sl 2s ease-in-out infinite;}
+@keyframes sl{0%,100%{top:10px;}50%{top:calc(100% - 14px);}}
+/* LOG */
+.log{background:#0d1117;color:#4ade80;font-size:12px;font-family:monospace;padding:10px 12px;border-radius:8px;min-height:44px;max-height:90px;overflow-y:auto;white-space:pre-wrap;margin-bottom:10px;line-height:1.5;}
+/* RESULTS */
+.res-ok{background:#ecfdf5;border:2px solid #059669;border-radius:14px;padding:22px;text-align:center;margin-bottom:14px;}
+.res-ok .big{font-size:52px;display:block;margin-bottom:8px;}
+.res-ok h2{font-size:22px;font-weight:800;color:#065f46;}
+.res-ok p{color:#047857;font-size:14px;margin-top:5px;}
+.res-fail{background:#fef2f2;border:2px solid #dc2626;border-radius:14px;padding:22px;text-align:center;margin-bottom:14px;}
+.res-fail .big{font-size:52px;display:block;margin-bottom:8px;}
+.res-fail h2{font-size:22px;font-weight:800;color:#991b1b;}
+.res-fail p{color:#b91c1c;font-size:14px;margin-top:5px;}
+table{width:100%;border-collapse:collapse;font-size:14px;}
+td{padding:9px 6px;border-bottom:1px solid #f3f4f6;vertical-align:top;}
+td:first-child{color:#6b7280;width:40%;font-weight:600;}
+td:last-child{word-break:break-word;color:#111;}
+/* SAVED */
+.si{background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;margin-bottom:10px;position:relative;}
+.si h4{font-size:15px;font-weight:700;padding-right:30px;}
+.si p{font-size:12px;color:#6b7280;margin-top:3px;}
+.si .bdg{display:inline-block;padding:2px 9px;border-radius:20px;font-size:12px;font-weight:700;margin-left:8px;}
+.bdg-ok{background:#d1fae5;color:#065f46;}
+.bdg-fail{background:#fee2e2;color:#991b1b;}
+.rm{position:absolute;top:10px;right:10px;background:none;border:none;font-size:20px;color:#9ca3af;cursor:pointer;padding:2px;line-height:1;}
+/* HIST */
+.hi{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f3f4f6;font-size:14px;}
+.hi:last-child{border-bottom:none;}
+.hi-code{font-weight:700;flex:1;}
+.hi-ts{font-size:11px;color:#9ca3af;}
+/* TABLET: tabla de resultados más amplia */
+@media(min-width:600px){td:first-child{width:32%;}}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-ico">📋</div>
+  <div>
+    <h1>Verificador LM-0019</h1>
+    <p>Grupo Procaps · Sistema de Documentación · Celular y Tablet</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- PASO 1: EXCEL -->
+  <div class="card">
+    <div class="card-h"><span>📊</span> Paso 1 — Cargar archivo Excel LM-0019</div>
+    <div class="card-b">
+      <div class="file-zone">
+        <div class="file-top">
+          <div class="file-ico">📁</div>
+          <div class="file-txt">
+            <h3>LM-0019.xlsx</h3>
+            <p>Encabezados en fila 4 · Datos desde fila 5 · Código en columna "Código Actual"</p>
+          </div>
+        </div>
+        <input type="file" id="fi" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv">
+      </div>
+      <div class="alert alert-ok" id="ok1"><h4 id="ok1t">Cargado</h4><span id="ok1s"></span></div>
+      <div class="alert alert-err" id="err1"><h4>Error al leer el archivo</h4><span id="err1s">Verifica que sea .xlsx válido</span></div>
+    </div>
+  </div>
+
+  <!-- PASO 2: BUSCAR / CÁMARA -->
+  <div class="card">
+    <div class="card-h"><span>🔍</span> Paso 2 — Buscar código</div>
+    <div class="card-b">
+
+      <div class="alert alert-warn" id="warn-noexcel" style="margin-bottom:10px;">
+        <h4>⚠️ Falta cargar el Excel</h4>
+        Carga primero el archivo LM-0019.xlsx en el Paso 1.
+      </div>
+
+      <!-- Input manual -->
+      <input type="text" class="inp" id="mc" placeholder="Escribe el código (ej: INST-0001 o INST-0001-14)" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" style="margin-bottom:10px;">
+      <button class="btn btn-green" id="btn-buscar" style="margin-bottom:12px;">
+        <span class="ico">🔍</span> Buscar código escrito
+      </button>
+
+      <!-- Cámara -->
+      <div class="cam-wrap" id="cam-wrap">
+        <video id="vid" autoplay playsinline muted></video>
+        <div class="cam-frame">
+          <div class="cam-box">
+            <div class="c c-tl"></div><div class="c c-tr"></div>
+            <div class="c c-bl"></div><div class="c c-br"></div>
+            <div class="scan-line"></div>
+          </div>
+        </div>
+        <div class="cam-hint">Centra el código de barras en el recuadro verde</div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-blue" id="btn-cam"><span class="ico">📷</span> Abrir cámara</button>
+        <button class="btn btn-gray" id="btn-stop" style="display:none"><span class="ico">⏹</span> Detener</button>
+      </div>
+
+      <!-- Log de estado -->
+      <div class="log" id="log">Listo. Carga el Excel y luego busca un código.</div>
+
+      <!-- Instrucciones de permiso según dispositivo -->
+      <div class="alert alert-warn" id="perm-android" style="display:none">
+        <h4>📷 Permiso de cámara — Android Chrome</h4>
+        1. Toca el ícono 🔒 o ⓘ en la barra de dirección<br>
+        2. Toca <strong>Permisos</strong><br>
+        3. Activa <strong>Cámara → Permitir</strong><br>
+        4. Recarga la página y vuelve a intentar
+      </div>
+      <div class="alert alert-warn" id="perm-ios" style="display:none">
+        <h4>📷 Permiso de cámara — iPhone/iPad</h4>
+        1. Ve a <strong>Configuración</strong> del iPhone<br>
+        2. Busca <strong>Safari</strong><br>
+        3. Toca <strong>Cámara → Permitir</strong><br>
+        4. Vuelve a Safari y recarga la página
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RESULTADO -->
+  <div id="res"></div>
+
+  <!-- ACCIONES -->
+  <div id="act" style="display:none;margin-bottom:14px;">
+    <div class="btn-row three">
+      <button class="btn btn-amber" id="btn-save"><span class="ico">💾</span> Guardar</button>
+      <button class="btn btn-gray" id="btn-new"><span class="ico">🔄</span> Nueva consulta</button>
+    </div>
+  </div>
+
+  <!-- INFORME -->
+  <div class="card" id="inf-card" style="display:none">
+    <div class="card-h"><span>📋</span> Informe — <span id="inf-cnt">0</span> registro(s)</div>
+    <div class="card-b">
+      <div id="inf-list"></div>
+      <div class="btn-row" style="margin-top:12px">
+        <button class="btn btn-purple" id="btn-pdf"><span class="ico">📄</span> Generar PDF</button>
+        <button class="btn btn-pink" id="btn-mail"><span class="ico">✉️</span> Enviar correo</button>
+      </div>
+      <button class="btn btn-red" id="btn-clear" style="margin-top:10px"><span class="ico">🗑️</span> Limpiar todos los registros</button>
+    </div>
+  </div>
+
+  <!-- HISTORIAL -->
+  <div class="card" id="hist-card" style="display:none">
+    <div class="card-h"><span>🕐</span> Historial de consultas</div>
+    <div class="card-b" id="hist-body"></div>
+  </div>
+
+</div>
+
+<!-- LIBRERÍAS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+/* ── ESTADO ── */
+var excelData=[], curRes=null, saved=[], scanHist=[];
+var camStream=null, scanInterval=null, detector=null;
+
+/* ── DETECTAR PLATAFORMA ── */
+var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||
+  (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+var isAndroid=/Android/i.test(navigator.userAgent);
+
+/* ── LOG ── */
+function lg(m){
+  var el=document.getElementById('log');
+  var t=new Date().toLocaleTimeString('es-CO');
+  el.textContent='['+t+'] '+m+'\n'+el.textContent;
+  console.log(m);
+}
+
+/* ── HELPERS ── */
+function show(id,d){document.getElementById(id).style.display=d||'block';}
+function hide(id){document.getElementById(id).style.display='none';}
+function el(id){return document.getElementById(id);}
+
+/* ── VERIFICAR LIBRERÍAS ── */
+function waitLib(name,cb,tries){
+  tries=tries||0;
+  if(tries>20){lg('ERROR: librería '+name+' no cargó'); return;}
+  if(window[name]!==undefined){cb();}
+  else{setTimeout(function(){waitLib(name,cb,tries+1);},300);}
+}
+
+/* ── EXCEL ── */
+el('fi').addEventListener('change',function(e){
+  var file=e.target.files&&e.target.files[0];
+  if(!file){return;}
+  lg('Archivo: '+file.name+' ('+Math.round(file.size/1024)+' KB)');
+  hide('ok1'); hide('err1');
+
+  function doLoad(){
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      try{
+        var wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});
+        lg('Hojas: '+wb.SheetNames.join(', '));
+        var ws=wb.Sheets[wb.SheetNames[0]];
+        var raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+        lg('Total filas raw: '+raw.length);
+        var hdrs=(raw[3]||[]).map(function(h){return String(h||'').trim();});
+        lg('Encabezados fila 4: '+hdrs.filter(Boolean).slice(0,5).join(' | '));
+        var data=[];
+        for(var i=4;i<raw.length;i++){
+          var row=raw[i]||[];
+          if(row.every(function(c){return c===''||c===null||c===undefined;}))continue;
+          var obj={};
+          hdrs.forEach(function(h,j){if(h)obj[h]=String(row[j]!==undefined?row[j]:'').trim();});
+          data.push(obj);
+        }
+        if(!data.length)throw new Error('Sin datos desde fila 5');
+        excelData=data;
+        lg('OK: '+data.length+' documentos cargados');
+        show('ok1');
+        el('ok1t').textContent='✅ '+file.name;
+        el('ok1s').textContent=data.length+' documentos · '+hdrs.filter(Boolean).length+' columnas cargadas';
+        hide('err1');
+      }catch(err){
+        lg('ERROR Excel: '+err.message);
+        show('err1');
+        el('err1s').textContent=err.message;
+      }
+    };
+    reader.onerror=function(){lg('FileReader error');show('err1');};
+    reader.readAsArrayBuffer(file);
+  }
+
+  if(typeof XLSX!=='undefined'){doLoad();}
+  else{lg('Esperando librería XLSX...');waitLib('XLSX',doLoad);}
+});
+
+/* ── VARIANTES DE CÓDIGO ── */
+function variants(raw){
+  var list=[raw];
+  // INST-0001-14 → INST-0001
+  var m=raw.match(/^(.+)-(\d+)$/);
+  if(m)list.push(m[1]);
+  // Mayúsculas por si acaso
+  if(raw!==raw.toUpperCase())list.push(raw.toUpperCase());
+  return list;
+}
+
+/* ── BÚSQUEDA ── */
+var PRIO_COLS=['Código Actual','Codigo Actual','Código Anterior','Codigo Anterior','Código','Codigo'];
+
+function searchCode(raw){
+  var vs=variants(raw);
+  lg('Buscando: '+vs.join(' | ')+' en '+excelData.length+' registros');
+  for(var vi=0;vi<vs.length;vi++){
+    var q=vs[vi].toLowerCase().trim();
+    // columnas prioritarias
+    for(var ci=0;ci<PRIO_COLS.length;ci++){
+      for(var i=0;i<excelData.length;i++){
+        var v=String(excelData[i][PRIO_COLS[ci]]||'').toLowerCase().trim();
+        if(v&&v===q){
+          lg('ENCONTRADO en col "'+PRIO_COLS[ci]+'" fila '+(i+5));
+          return{found:true,row:excelData[i],code:raw,matched:excelData[i][PRIO_COLS[ci]]};
+        }
+      }
+    }
+    // todas las columnas
+    for(var i=0;i<excelData.length;i++){
+      var vals=Object.values(excelData[i]);
+      for(var j=0;j<vals.length;j++){
+        if(String(vals[j]).toLowerCase().trim()===q){
+          lg('ENCONTRADO (fallback) fila '+(i+5));
+          return{found:true,row:excelData[i],code:raw,matched:vals[j]};
+        }
+      }
+    }
+  }
+  lg('NO encontrado: '+raw);
+  return{found:false,row:null,code:raw};
+}
+
+/* ── BUSCAR MANUAL ── */
+function doBuscar(){
+  lg('Botón Buscar presionado');
+  if(!excelData.length){show('warn-noexcel','block');lg('Excel no cargado');return;}
+  hide('warn-noexcel');
+  var code=el('mc').value.trim();
+  if(!code){alert('Escribe un código para buscar');return;}
+  lg('Buscando código: "'+code+'"');
+  var r=searchCode(code);
+  showResult(r);
+  el('mc').value='';
+}
+el('btn-buscar').addEventListener('click',doBuscar);
+el('mc').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();doBuscar();}});
+
+/* ── RESULTADO ── */
+var KEY_COLS=['Código Actual','Código Anterior','Descripción','Versión','Tipo de Documento','Área Generadora','Proceso','Estado','Fecha de Vigencia','Fecha de Vencimiento','Administrador','Líder de Proceso','Correo Electrónico','Alcance Empresas','Doc. GxP'];
+
+function showResult(res){
+  curRes=res;
+  var ts=new Date().toLocaleString('es-CO',{dateStyle:'short',timeStyle:'short'});
+  curRes.ts=ts; curRes.tsLong=new Date().toLocaleString('es-CO');
+  var area=el('res');
+  var h='';
+  if(res.found){
+    var rows='';
+    if(res.matched&&res.matched!==res.code){
+      rows+='<tr><td>Código escaneado</td><td>'+res.code+'</td></tr>';
+      rows+='<tr><td>Código en listado</td><td>'+res.matched+'</td></tr>';
+    }
+    KEY_COLS.forEach(function(c){
+      var v=res.row[c]; if(v&&v!=='')rows+='<tr><td>'+c+'</td><td>'+v+'</td></tr>';
+    });
+    Object.keys(res.row).forEach(function(c){
+      if(KEY_COLS.indexOf(c)<0&&res.row[c]!=='')rows+='<tr><td>'+c+'</td><td>'+res.row[c]+'</td></tr>';
+    });
+    rows+='<tr><td>Consultado</td><td>'+ts+'</td></tr>';
+    h='<div class="res-ok"><span class="big">✅</span><h2>EN CUMPLIMIENTO</h2>'
+      +'<p>Código <strong>'+res.code+'</strong> encontrado en LM-0019</p></div>'
+      +'<div class="card"><div class="card-h"><span>📋</span> Detalle del documento</div>'
+      +'<div class="card-b"><table>'+rows+'</table></div></div>';
+  }else{
+    h='<div class="res-fail"><span class="big">❌</span><h2>NO CUMPLE</h2>'
+      +'<p>Código <strong>'+res.code+'</strong> no encontrado en LM-0019</p></div>'
+      +'<div class="card"><div class="card-h"><span>⚠️</span> Información</div>'
+      +'<div class="card-b"><table>'
+      +'<tr><td>Código buscado</td><td>'+res.code+'</td></tr>'
+      +'<tr><td>Estado</td><td style="color:#b91c1c;font-weight:700">No encontrado en el listado maestro</td></tr>'
+      +'<tr><td>Consultado</td><td>'+ts+'</td></tr>'
+      +'</table></div></div>';
+  }
+  area.innerHTML=h;
+  show('act');
+  el('btn-save').disabled=false;
+  el('btn-save').innerHTML='<span class="ico">💾</span> Guardar en informe';
+  scanHist.unshift({code:res.code,found:res.found,ts:ts});
+  renderHist();
+  setTimeout(function(){area.scrollIntoView({behavior:'smooth',block:'start'});},120);
+}
+
+/* ── CÁMARA ── */
+el('btn-cam').addEventListener('click',function(){
+  lg('Botón cámara presionado');
+  hide('perm-android'); hide('perm-ios');
+  if(!excelData.length){show('warn-noexcel','block');lg('Excel no cargado');return;}
+  hide('warn-noexcel');
+
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    lg('getUserMedia NO disponible');
+    alert('Tu navegador no soporta cámara.\niPhone/iPad: usa Safari.\nAndroid: usa Chrome.');
+    return;
+  }
+
+  lg('Solicitando permiso de cámara...');
+  el('btn-cam').disabled=true;
+
+  navigator.mediaDevices.getUserMedia({
+    video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},
+    audio:false
+  }).then(function(stream){
+    lg('Cámara OK — video iniciado');
+    camStream=stream;
+    var vid=el('vid');
+    vid.srcObject=stream;
+    vid.play().catch(function(e){lg('play error: '+e);});
+    show('cam-wrap');
+    hide('btn-cam');
+    show('btn-stop');
+
+    if(typeof BarcodeDetector!=='undefined'){
+      lg('BarcodeDetector nativo disponible — iniciando escaneo automático');
+      detector=new BarcodeDetector({
+        formats:['code_128','ean_13','ean_8','code_39','qr_code','upc_a','upc_e','itf','codabar','data_matrix']
+      });
+      scanInterval=setInterval(function(){
+        if(!camStream||vid.readyState<2)return;
+        detector.detect(vid).then(function(codes){
+          if(codes&&codes.length){
+            var code=codes[0].rawValue;
+            lg('CÓDIGO DETECTADO: '+code);
+            stopCam();
+            var r=searchCode(code);
+            showResult(r);
+          }
+        }).catch(function(){});
+      },500);
+    }else{
+      lg('BarcodeDetector NO disponible — cámara abierta para lectura visual');
+      alert('Cámara abierta.\n\nTu dispositivo/versión no soporta escaneo automático.\n\nLee el código visualmente y escríbelo en el campo de texto.');
+    }
+  }).catch(function(err){
+    lg('ERROR cámara: '+err.name+' — '+err.message);
+    el('btn-cam').disabled=false;
+
+    if(err.name==='NotAllowedError'||err.name==='PermissionDeniedError'){
+      if(isAndroid){
+        show('perm-android','block');
+        lg('Mostrando instrucciones Android');
+      }else{
+        show('perm-ios','block');
+        lg('Mostrando instrucciones iOS');
+      }
+    }else if(err.name==='NotFoundError'){
+      alert('No se encontró cámara en este dispositivo.');
+    }else{
+      alert('Error al abrir cámara: '+err.name+'\n'+err.message);
+    }
+  });
+});
+
+el('btn-stop').addEventListener('click',stopCam);
+
+function stopCam(){
+  lg('Cámara detenida');
+  if(scanInterval){clearInterval(scanInterval);scanInterval=null;}
+  if(camStream){camStream.getTracks().forEach(function(t){t.stop();});camStream=null;}
+  var vid=el('vid'); vid.srcObject=null;
+  hide('cam-wrap');
+  show('btn-cam'); hide('btn-stop');
+  el('btn-cam').disabled=false;
+}
+
+/* ── GUARDAR ── */
+el('btn-save').addEventListener('click',function(){
+  if(!curRes)return;
+  saved.push(JSON.parse(JSON.stringify(curRes)));
+  renderSaved();
+  el('btn-save').disabled=true;
+  el('btn-save').innerHTML='<span class="ico">✅</span> Guardado';
+  lg('Guardado en informe ('+saved.length+' total)');
+});
+
+el('btn-new').addEventListener('click',function(){
+  curRes=null;
+  el('res').innerHTML='';
+  hide('act');
+  el('mc').value='';
+  window.scrollTo({top:0,behavior:'smooth'});
+  lg('Nueva consulta');
+});
+
+function removeRec(i){saved.splice(i,1);renderSaved();lg('Registro eliminado');}
+
+el('btn-clear').addEventListener('click',function(){
+  if(!saved.length)return;
+  if(confirm('¿Limpiar todos los registros del informe?')){saved=[];renderSaved();lg('Informe limpiado');}
+});
+
+function renderSaved(){
+  if(!saved.length){hide('inf-card');return;}
+  show('inf-card');
+  el('inf-cnt').textContent=saved.length;
+  var h='';
+  saved.forEach(function(r,i){
+    var desc=r.row?(r.row['Descripción']||r.row['Descripcion']||''):'';
+    h+='<div class="si">'
+      +'<button class="rm" onclick="removeRec('+i+')">✕</button>'
+      +'<h4>'+r.code+' <span class="bdg '+(r.found?'bdg-ok':'bdg-fail')+'">'+(r.found?'Cumple':'No cumple')+'</span></h4>'
+      +'<p>'+r.ts+(desc?' · '+String(desc).substring(0,60)+(desc.length>60?'...':''):'')+'</p>'
+      +'</div>';
+  });
+  el('inf-list').innerHTML=h;
+}
+
+function renderHist(){
+  if(!scanHist.length)return;
+  show('hist-card');
+  var h='';
+  scanHist.slice(0,20).forEach(function(x){
+    h+='<div class="hi"><span class="hi-code">'+x.code+'</span>'
+      +'<span class="hi-ts">'+x.ts+'</span>'
+      +'<span class="bdg '+(x.found?'bdg-ok':'bdg-fail')+'">'+(x.found?'Cumple':'No cumple')+'</span></div>';
+  });
+  el('hist-body').innerHTML=h;
+}
+
+/* ── PDF ── */
+el('btn-pdf').addEventListener('click',genPDF);
+el('btn-mail').addEventListener('click',function(){
+  var recs=saved.length?saved:(curRes?[curRes]:[]);
+  if(!recs.length){alert('No hay registros guardados');return;}
+  genPDF();
+  var now=new Date().toLocaleString('es-CO');
+  var okc=recs.filter(function(r){return r.found;}).length;
+  var subj='Informe LM-0019 | '+recs.length+' codigos | '+now;
+  var body='INFORME DE VERIFICACION - GRUPO PROCAPS\n================================\n\n'
+    +'Fecha: '+now+'\nTotal: '+recs.length+'\nCumplen: '+okc+'\nNo cumplen: '+(recs.length-okc)+'\n\nDETALLE:\n';
+  recs.forEach(function(r,i){
+    body+='\n['+(i+1)+'] '+r.code+' — '+(r.found?'EN CUMPLIMIENTO':'NO CUMPLE')+'\n    Fecha: '+(r.tsLong||r.ts)+'\n';
+    if(r.found&&r.row){
+      var d=r.row['Descripción']||r.row['Descripcion']||'';
+      if(d)body+='    Desc: '+d+'\n';
+      var e=r.row['Estado']||'';
+      if(e)body+='    Estado: '+e+'\n';
+    }
+  });
+  body+='\n================================\nADJUNTA el PDF descargado a este correo.\nApp Verificadora LM-0019 - Grupo Procaps';
+  setTimeout(function(){
+    window.location.href='mailto:?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body);
+  },800);
+  lg('Abriendo correo...');
+});
+
+function genPDF(){
+  if(typeof window.jspdf==='undefined'){
+    lg('jsPDF no listo, esperando...');
+    waitLib('jspdf',genPDF);
+    return;
+  }
+  var recs=saved.length?saved:(curRes?[curRes]:[]);
+  if(!recs.length){alert('No hay registros para el PDF');return;}
+  var jsPDF=window.jspdf.jsPDF;
+  var doc=new jsPDF({unit:'mm',format:'a4'});
+  var now=new Date().toLocaleString('es-CO');
+
+  doc.setFillColor(26,58,92);doc.rect(0,0,210,30,'F');
+  doc.setFillColor(15,110,86);doc.rect(0,26,210,6,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(16);doc.setFont('helvetica','bold');
+  doc.text('INFORME DE VERIFICACION LM-0019',14,17);
+  doc.setFontSize(8.5);doc.setFont('helvetica','normal');
+  doc.text('Grupo Procaps  |  Listado Maestro de Documentos  |  '+now,14,24);
+
+  var y=40;doc.setTextColor(20,20,20);
+  var total=recs.length,okc=recs.filter(function(r){return r.found;}).length;
+  doc.setFont('helvetica','bold');doc.setFontSize(11);
+  doc.text('RESUMEN GENERAL',14,y);y+=6;
+  doc.setDrawColor(210,210,210);doc.line(14,y,196,y);y+=7;
+  doc.setFont('helvetica','normal');doc.setFontSize(10);
+  doc.text('Total verificados: '+total,14,y);y+=6;
+  doc.setTextColor(6,95,70);doc.text('En cumplimiento: '+okc,14,y);y+=6;
+  doc.setTextColor(153,27,27);doc.text('No cumplen: '+(total-okc),14,y);y+=12;
+  doc.setTextColor(20,20,20);
+
+  recs.forEach(function(r,idx){
+    if(y>248){doc.addPage();y=20;}
+    var ok=r.found;
+    if(ok){doc.setFillColor(236,253,245);doc.setDrawColor(5,150,105);}
+    else{doc.setFillColor(254,242,242);doc.setDrawColor(220,38,38);}
+    doc.roundedRect(14,y,182,20,3,3,'FD');
+    doc.setFont('helvetica','bold');doc.setFontSize(12);
+    doc.setTextColor(ok?6:153,ok?95:27,ok?70:27);
+    doc.text((ok?'EN CUMPLIMIENTO':'NO CUMPLE')+'  —  '+r.code,105,y+13,{align:'center'});
+    y+=26;doc.setTextColor(20,20,20);
+
+    [['Código:',r.code],['Fecha:',r.tsLong||r.ts],['Estado:',ok?'Encontrado en LM-0019':'NO encontrado en el listado']].forEach(function(row){
+      if(y>272){doc.addPage();y=20;}
+      doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text(row[0],14,y);
+      doc.setFont('helvetica','normal');var ln=doc.splitTextToSize(row[1],120);doc.text(ln,48,y);y+=ln.length*6+1;
+    });
+
+    if(ok&&r.row){
+      y+=2;doc.setFont('helvetica','bold');doc.setFontSize(9.5);doc.text('Detalle del documento:',14,y);y+=5;
+      var printed={};
+      KEY_COLS.forEach(function(c){
+        var v=r.row[c];
+        if(v&&v!==''){
+          if(y>272){doc.addPage();y=20;}
+          doc.setFont('helvetica','bold');doc.text(c+':',18,y);
+          doc.setFont('helvetica','normal');var ln=doc.splitTextToSize(v,112);doc.text(ln,76,y);
+          y+=ln.length*5.2+1;printed[c]=true;
+        }
+      });
+      Object.entries(r.row).forEach(function(e){
+        if(!printed[e[0]]&&e[1]&&e[1]!==''){
+          if(y>272){doc.addPage();y=20;}
+          doc.setFont('helvetica','bold');doc.text(e[0]+':',18,y);
+          doc.setFont('helvetica','normal');var ln=doc.splitTextToSize(e[1],112);doc.text(ln,76,y);
+          y+=ln.length*5.2+1;
+        }
+      });
+    }
+    y+=10;
+    if(idx<recs.length-1){doc.setDrawColor(225,225,225);doc.line(14,y-5,196,y-5);}
+  });
+
+  var ph=doc.internal.pageSize.height;
+  doc.setFillColor(26,58,92);doc.rect(0,ph-14,210,14,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+  doc.text('Generado: '+now+'  |  Grupo Procaps  |  Listado Maestro LM-0019  |  '+total+' codigo(s) verificado(s)',105,ph-5.5,{align:'center'});
+
+  var fn='Informe_LM0019_'+Date.now()+'.pdf';
+  doc.save(fn);
+  lg('PDF generado: '+fn);
+}
+
+lg('App iniciada | '+
+  (isAndroid?'Android':'')+(isIOS?'iOS':'')+((!isAndroid&&!isIOS)?'Escritorio/Tablet':'') +
+  ' | XLSX:'+(typeof XLSX!=='undefined'?'OK':'cargando...')+
+  ' | jsPDF:'+(typeof window.jspdf!=='undefined'?'OK':'cargando...')+
+  ' | BarcodeDetector:'+(typeof BarcodeDetector!=='undefined'?'DISPONIBLE':'no disponible'));
+</script>
+</body>
+</html>
