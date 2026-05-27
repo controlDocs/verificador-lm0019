@@ -239,8 +239,44 @@ input[type=file].file-inp::file-selector-button{background:#1a3a5c;color:#fff;bo
         <input type="text" class="inp" id="inspector" placeholder="Nombre completo" autocomplete="name">
       </div>
       <div class="fg">
-        <label>Área inspeccionada</label>
-        <input type="text" class="inp" id="area-inp" placeholder="Ej: Producción, Calidad..." autocomplete="off">
+        <label>Planta</label>
+        <select class="inp" id="planta-sel" onchange="onPlantaChange()">
+          <option value="">— Seleccionar planta —</option>
+          <option>PLANTA_SOFTGEL_I</option>
+          <option>PLANTA_SOFTGEL_II</option>
+          <option>PLANTA_FARMIX_I</option>
+          <option>PLANTA_FARMIX_II</option>
+          <option>ACONDICIONAMIENTO_I</option>
+          <option>ACONDICIONAMIENTO_II</option>
+          <option>ACONDICIONAMIENTO_III</option>
+          <option>PLANTA_HORMOGEL</option>
+          <option>PLANTA_HORMOTAB</option>
+          <option>PLANTA_G-TAB</option>
+          <option>PLANTA_INMUNOSUPRESORES</option>
+          <option value="__manual__">✏️ Escribir planta manualmente...</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row" id="area-row">
+      <div class="fg">
+        <label>Área / Subárea</label>
+        <select class="inp" id="area-sel" onchange="onAreaChange()">
+          <option value="">— Seleccionar área —</option>
+        </select>
+      </div>
+      <div class="fg" id="area-manual-wrap" style="display:none">
+        <label>Área manual</label>
+        <input type="text" class="inp" id="area-inp" placeholder="Escribe el área..." autocomplete="off">
+      </div>
+    </div>
+    <div class="form-row" id="planta-manual-wrap" style="display:none">
+      <div class="fg">
+        <label>Planta (manual)</label>
+        <input type="text" class="inp" id="planta-manual" placeholder="Escribe la planta..." autocomplete="off">
+      </div>
+      <div class="fg">
+        <label>Área (manual)</label>
+        <input type="text" class="inp" id="area-inp-manual" placeholder="Escribe el área..." autocomplete="off">
       </div>
     </div>
   </div>
@@ -391,6 +427,131 @@ function setXstat(type, title, sub){
           : type === 'ok'      ? '<div class="xs-ico">✅</div>'
           :                      '<div class="xs-ico">❌</div>';
   s.innerHTML = ico + '<div class="xs-txt"><h4>' + title + '</h4><p>' + sub + '</p></div>';
+}
+
+
+/* ══ PLANTAS Y ÁREAS ══ */
+var PLANT_AREAS = {
+  'PLANTA_SOFTGEL_II': [
+    'RECUBRIMIENTO','DECARGUE E INSPECCIÓN 1','DECARGUE E INSPECCIÓN 2','DECARGUE E INSPECCIÓN 3',
+    'PRODUCTO EN PROCESO','INSPECCIÓN MANUAL','ENVASE DE CAPSULAS 2','LUBRICACIÓN DE CAPSULAS',
+    'CHEQUEADORA DE PESO','ENVASE DE CAPSULAS 1','INSPECCION AUTOMATICA Y PESAJE','ENCAPSULADO 10',
+    'ENCAPSULADO 9','CARROS LIMPIOS','UTENSILIOS','ENCAPSULADO 5','ENCAPSULADO 6','ENCAPSULADO 7',
+    'DESCARGUE 3','DESCARGUE 4','DESCARGUE 5','ESCLUSA AREA BLANCA / GRIS','TANQUES EN ESPERA 1',
+    'TANQUES EN ESPERA 2','PESAJE','PRODUCTOS POR INSPECCIONAR','UTENSILIOS','INSPECCIÓN 2',
+    'INSPECCIÓN 3','INSPECCIÓN 4','FABRICACIÓN DE GELATINA 1'
+  ],
+  'PLANTA_SOFTGEL_I': [
+    'INSPECCIÓN 5','INSPECCIÓN 6','PRODUCTOS POR PESAR','ENCAPSULADO 2','ENCAPSULADO 3',
+    'ENCAPSULADO 4','FABRICACIÓN DE MEDICINA 1','FABRICACIÓN DE MEDICINA 2','FABRICACIÓN DE MEDICINA 3',
+    'FABRICACIÓN DE MEDICINA 10','FABRICACIÓN DE MEDICINA 8','FABRICACIÓN DE MEDICINA 9',
+    'IMPRESIÓN DE CAPSULAS / A-234','IMPRESIÓN DE CAPSULAS / A-235','LAVADO DE CAPSULAS',
+    'ENCAPSULADO 5','ENCAPSULADO 6','ENCAPSULADO 7','DESCARGUE 3','DESCARGUE 4','DESCARGUE 5',
+    'ESCLUSA AREA BLANCA / GRIS','TANQUES EN ESPERA 1','TANQUES EN ESPERA 2','PESAJE',
+    'PRODUCTOS POR INSPECCIONAR','UTENSILIOS','INSPECCIÓN 2','INSPECCIÓN 3','INSPECCIÓN 4',
+    'FABRICACIÓN DE GELATINA 1','BLISTER NEO','BLISTER NOACK 1','BLISTER UHLMAN 1',
+    'FABRICACIÓN Y ENVASE CREMA','TABLETEADO 1','TABLETEADO 2','UHLMAN 5','RECUBRIMIENTO 3',
+    'TABLETEADO 3','TABLETEADO 4','CONTROL EN PROCESO','RECUBRIMIENTO 2','ZANASI',
+    'ENVASE DE POLVOS 1','HORNOS','MEZCLA 5','SECADO 1','SECADO 3','BODEGA DE TRÁNSITO','FORMATOS',
+    'MANTENIMIENTO','ENVASE DE POLVOS 3'
+  ],
+  'PLANTA_FARMIX_I': [
+    'MEZCLA 3','MEZCLADOR BINES','SECADO 2','ÁREA A-302','ASEO','ENVASE DE POLVOS 3',
+    'EQUIPOS LIMPIOS','PREPARACIÓN DE CUBIERTAS','RECUBRIMIENTO 1','MEZCLA 1','SECADO 1',
+    'SECADO 3','BODEGA DE TRÁNSITO','FORMATOS','MANTENIMIENTO','ENVASE DE POLVOS 1',
+    'HORNOS','MEZCLA 5','TABLETEADO 1','TABLETEADO 2','TABLETEADO 3','TABLETEADO 4',
+    'RECUBRIMIENTO 2','RECUBRIMIENTO 3','CONTROL EN PROCESO','ZANASI','BLISTER NEO',
+    'BLISTER NOACK 1','BLISTER UHLMAN 1','UHLMAN 5'
+  ],
+  'PLANTA_FARMIX_II': [
+    'MEZCLA 3','MEZCLADOR BINES','SECADO 2','ÁREA A-302','ASEO','ENVASE DE POLVOS 3',
+    'EQUIPOS LIMPIOS','PREPARACIÓN DE CUBIERTAS','RECUBRIMIENTO 1','MEZCLA 1','SECADO 1',
+    'SECADO 3','BODEGA DE TRÁNSITO','FORMATOS','MANTENIMIENTO','ENVASE DE POLVOS 1',
+    'HORNOS','MEZCLA 5','TABLETEADO 1','TABLETEADO 2','TABLETEADO 3','TABLETEADO 4',
+    'RECUBRIMIENTO 2','RECUBRIMIENTO 3','CONTROL EN PROCESO','ZANASI'
+  ],
+  'ACONDICIONAMIENTO_I':   ['BLISTER','FRASCO','ESTUCHE','ETIQUETADO','EMBALAJE','AQL','EMPAQUE'],
+  'ACONDICIONAMIENTO_II':  ['BLISTER','FRASCO','ESTUCHE','ETIQUETADO','EMBALAJE','AQL','EMPAQUE'],
+  'ACONDICIONAMIENTO_III': ['BLISTER','FRASCO','ESTUCHE','ETIQUETADO','EMBALAJE','AQL','EMPAQUE'],
+  'PLANTA_HORMOGEL': [
+    'VESTIER MUJERES','VESTIER HOMBRES','SELECTORA','INSPECCIÓN MANUAL','BLISTER',
+    'ENVASE CAPSULA','AQL','ÁREA DE DESECHOS','PESAJE','BLISTER','DESCARGUE',
+    'MEDICINA 2','PESAJE','BLISTER','ENTRADA DE EQUIPOS SUCIOS','MANTENIMIENTO',
+    'GELATINA','ENCAPSULADO','MEDICINA 1','DISPENSACIÓN Y MUESTREO',
+    'MP X DISPENSAR / DISPENSADA','ESCLUSA DE MP','DISPENSACIÓN','INSPECCIÓN',
+    'MEZCLADO Y MOLIENDA','RECUBRIMIENTO','TABLETEADO','INSPECCIÓN Y DESCARGUE',
+    'SISTEMA AGUA PURIFICADA'
+  ],
+  'PLANTA_HORMOTAB': [
+    'VESTIER MUJERES','VESTIER HOMBRES','SELECTORA','INSPECCIÓN MANUAL','BLISTER',
+    'ENVASE CAPSULA','AQL','ÁREA DE DESECHOS','PESAJE','DESCARGUE',
+    'MEDICINA 2','PESAJE','BLISTER','ENTRADA DE EQUIPOS SUCIOS','MANTENIMIENTO',
+    'GELATINA','ENCAPSULADO','MEDICINA 1','DISPENSACIÓN Y MUESTREO',
+    'MP X DISPENSAR / DISPENSADA','ESCLUSA DE MP','DISPENSACIÓN','INSPECCIÓN',
+    'MEZCLADO Y MOLIENDA','RECUBRIMIENTO','TABLETEADO','INSPECCIÓN Y DESCARGUE'
+  ],
+  'PLANTA_G-TAB': [
+    'DISPENSACIÓN','PESAJE','INSPECCIÓN','FABRICACIÓN DE GELATINA','UTENSILIOS',
+    'EQUIPOS LIMPIOS','EQUIPOS SUCIOS','AGENTES SANITIZANTES','MANTENIMIENTO',
+    'SISTEMA AGUA PURIFICADA','CUARTO DE ASEO','DESECHOS'
+  ],
+  'PLANTA_INMUNOSUPRESORES': [
+    'DISPENSACIÓN','PESAJE','INSPECCIÓN','FABRICACIÓN DE GELATINA','UTENSILIOS',
+    'EQUIPOS LIMPIOS','EQUIPOS SUCIOS','AGENTES SANITIZANTES','MANTENIMIENTO',
+    'SISTEMA AGUA PURIFICADA','CUARTO DE ASEO','DESECHOS'
+  ]
+};
+
+function onPlantaChange(){
+  var sel = g('planta-sel').value;
+  var manualWrap = g('planta-manual-wrap');
+  var areaRow    = g('area-row');
+  var areaSel    = g('area-sel');
+  if(sel === '__manual__'){
+    manualWrap.style.display = 'block';
+    areaRow.style.display    = 'none';
+  } else {
+    manualWrap.style.display = 'none';
+    areaRow.style.display    = '';
+    /* Populate area dropdown */
+    areaSel.innerHTML = '<option value="">— Seleccionar área —</option>';
+    if(sel && PLANT_AREAS[sel]){
+      PLANT_AREAS[sel].forEach(function(a){
+        areaSel.innerHTML += '<option>'+a+'</option>';
+      });
+    }
+    areaSel.innerHTML += '<option value="__manual_area__">✏️ Escribir manualmente...</option>';
+  }
+}
+
+function onAreaChange(){
+  var v = g('area-sel').value;
+  var wrap = g('area-manual-wrap');
+  if(v === '__manual_area__'){
+    wrap.style.display = 'block';
+    if(!g('area-inp')) {
+      var inp = document.createElement('input');
+      inp.type='text'; inp.className='inp'; inp.id='area-inp';
+      inp.placeholder='Escribe el área...'; inp.autocomplete='off';
+      wrap.appendChild(inp);
+    }
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+
+function getPlanta(){
+  var sel = g('planta-sel') ? g('planta-sel').value : '';
+  if(sel === '__manual__') return (g('planta-manual') ? g('planta-manual').value.trim() : '');
+  return sel || '';
+}
+
+function getArea(){
+  var ps = g('planta-sel') ? g('planta-sel').value : '';
+  if(ps === '__manual__') return (g('area-inp-manual') ? g('area-inp-manual').value.trim() : '');
+  var as = g('area-sel') ? g('area-sel').value : '';
+  if(as === '__manual_area__') return (g('area-inp') ? g('area-inp').value.trim() : '');
+  return as || (g('area-inp') ? g('area-inp').value.trim() : '') || '';
 }
 
 /* ══ MODO DE INSPECCIÓN ══ */
@@ -572,11 +733,19 @@ function parseCodLB(raw){
     folio   = s.substring(si+1).trim();
     codeBIT = s.substring(0, si).trim();
   } else {
-    /* Caso 2: último bloque numérico al final, precedido por letra+separador */
-    var mE = s.match(/^(.*[A-Z])['\-](\d+)$/);
-    if(mE){
-      folio   = mE[2];
-      codeBIT = s.substring(0, s.lastIndexOf(mE[2])).replace(/['\-]$/, '').trim();
+    /* Caso 2: formato manual con guiones BIT-0020-26-LCC (sin folio)
+       Detectar: si el último segmento tiene letras → es parte del código, no folio */
+    var mManual = s.match(/^([A-Z]+-\d+-\d+-[A-Z]+)$/);
+    if(mManual){
+      codeBIT = mManual[1]; /* código completo, sin folio */
+      folio   = null;
+    } else {
+      /* Caso 3: último bloque numérico al final, precedido por letra+separador */
+      var mE = s.match(/^(.*[A-Z])['\-](\d+)$/);
+      if(mE){
+        folio   = mE[2];
+        codeBIT = s.substring(0, s.lastIndexOf(mE[2])).replace(/['\-]$/, '').trim();
+      }
     }
   }
 
@@ -837,7 +1006,7 @@ var CHECKLIST_QS = [
   'Se encuentra el documento disponible en el área correspondiente.',
   'El documento se encuentra en buen estado.',
   'La bitácora contiene el anexo correspondiente.',
-  'El documento no muestra fallas en integridad de datos (enmendaduras, espacios en blanco, uso de corrector, información legible, no faltan firmas).',
+  'El documento no muestra fallas en integridad de datos (enmendaduras, espacios en blanco, uso de corrector, información ilegible, no faltan firmas).',
   'No se encuentran documentos sueltos dentro de la bitácora.',
   'La bitácora está identificada con su etiqueta y está firmada.',
   'El número de folio registrado en la etiqueta coincide con la cantidad de folios que tiene la bitácora.'
@@ -845,8 +1014,15 @@ var CHECKLIST_QS = [
 
 function buildChecklist(idx){
   /* idx = índice del registro en saved[] */
+  var rec = saved[idx] || {};
+  var codLabel = rec.base || '—';
+  var nomLabel = rec.nombreRegistrado || rec.nombreForm || '';
+  var folLabel = rec.folio || rec.folioExcel || '';
   var h='<div class="chk-card">'
-    +'<div class="chk-hdr"><em>☑️</em> Lista de verificación — '+CHECKLIST_QS.length+' preguntas</div>'
+    +'<div class="chk-hdr"><em>☑️</em> Checklist: <strong>'+codLabel+'</strong>'
+    +(nomLabel?' — '+nomLabel:'')
+    +(folLabel?' · Folio: '+folLabel:'')
+    +' ('+CHECKLIST_QS.length+' preguntas)</div>'
     +'<div class="chk-body">';
   CHECKLIST_QS.forEach(function(q,qi){
     h+='<div class="chk-item">'
@@ -877,6 +1053,11 @@ function selectChk(savedIdx, qi, val, btn){
     if(!saved[savedIdx].checklist) saved[savedIdx].checklist=[];
     if(!saved[savedIdx].checklist[qi]) saved[savedIdx].checklist[qi]={r:'',obs:''};
     saved[savedIdx].checklist[qi].r = val;
+    /* Recalcular codeOk: hallazgo si documento en mal estado OR versión incorrecta OR checklist tiene algún NO */
+    var chkHallazgo = saved[savedIdx].checklist.some(function(c){ return c && c.r==='NO'; });
+    /* codeOk original (versión, estado) + checklist */
+    saved[savedIdx].chkHallazgo = chkHallazgo;
+    saved[savedIdx].codeOk = saved[savedIdx]._codeOkBase && !chkHallazgo;
     renderSaved(); updateStats();
   }
 }
@@ -914,7 +1095,11 @@ function showResult(res){
 
   /* AUTO-GUARDAR siempre */
   var copy = JSON.parse(JSON.stringify(curRes));
-  if(res.mode === 'lb') copy.checklist = new Array(CHECKLIST_QS.length).fill(null).map(function(){return{r:'',obs:''};});
+  copy._codeOkBase = copy.codeOk; /* preservar estado original antes del checklist */
+  if(res.mode === 'lb'){
+    copy.checklist = new Array(CHECKLIST_QS.length).fill(null).map(function(){return{r:'',obs:''};});
+    copy.chkHallazgo = false;
+  }
   var savedIdx = saved.length;
   saved.push(copy);
   renderSaved(); updateStats();
@@ -1050,9 +1235,7 @@ function doBuscar(){
     g('warn-noexcel').innerHTML='<h4>⚠️ Selecciona el tipo de inspección</h4>Elige Copias Controladas o Libros y Bitácoras en el Paso 1.';
     return;
   }
-  var code = g('mc').value.trim();
-  /* Limpiar caracteres no imprimibles que algunos lectores envían */
-  code = code.replace(/[\x00-\x1F\x7F]/g,'').trim();
+  var code = g('mc').value.trim().replace(/[ -]/g,'').trim();
   if(!code){ return; }
   lg('Buscando: "' + code + '"');
   var r = searchCode(code);
@@ -1061,35 +1244,47 @@ function doBuscar(){
   g('mc').focus();
 }
 
-/* ══ DETECCIÓN AUTOMÁTICA DEL LECTOR DE CÓDIGO DE BARRAS ══
-   Los lectores USB/Bluetooth envían los caracteres muy rápido (< 50ms entre teclas)
-   y al final envían Enter. Detectamos esto con un timer. */
-var scannerBuffer = '';
-var scannerTimer  = null;
-var SCANNER_TIMEOUT = 80; /* ms — los lectores escriben más rápido que un humano */
-
-g('mc').addEventListener('input', function(){
-  /* Cada vez que llega input, reiniciamos el timer */
-  clearTimeout(scannerTimer);
-  scannerTimer = setTimeout(function(){
-    /* Si el campo tiene contenido y llegó rápido, procesar */
-    var val = g('mc').value.trim().replace(/[\x00-\x1F\x7F]/g,'').trim();
-    if(val && val.length >= 4){
-      lg('Lector detectado (auto): "'+val+'"');
-      g('mc').value = val; /* asegurar valor limpio */
-      doBuscar();
-    }
-  }, SCANNER_TIMEOUT);
-});
-
-g('btn-buscar').addEventListener('click', doBuscar);
+/* ══ DETECCIÓN LECTOR DE CÓDIGO DE BARRAS ══
+   El lector envía caracteres muy rápido y termina con Enter.
+   El usuario escribe lento (> 150ms entre teclas).
+   Solo disparamos automáticamente si detectamos velocidad de lector. */
+var _lastKeyTime  = 0;
+var _scannerMode  = false; /* true si detectamos que es un lector */
+var _scanTimer    = null;
 
 g('mc').addEventListener('keydown', function(e){
+  var now = Date.now();
+  var gap = now - _lastKeyTime;
+  _lastKeyTime = now;
+
+  /* Si el gap entre teclas es < 50ms → es un lector de código de barras */
+  if(gap < 50 && gap > 0) _scannerMode = true;
+
   if(e.key === 'Enter'){
     e.preventDefault();
-    clearTimeout(scannerTimer);
+    clearTimeout(_scanTimer);
+    _scannerMode = false;
     doBuscar();
   }
+});
+
+/* Si es lector y termina de escribir, disparar búsqueda automáticamente */
+g('mc').addEventListener('input', function(){
+  if(!_scannerMode) return; /* escritura manual: esperar Enter */
+  clearTimeout(_scanTimer);
+  _scanTimer = setTimeout(function(){
+    var val = g('mc').value.trim().replace(/[ -]/g,'').trim();
+    if(val && val.length >= 3){
+      lg('Lector auto: "'+val+'"');
+      _scannerMode = false;
+      doBuscar();
+    }
+  }, 120);
+});
+
+g('btn-buscar').addEventListener('click', function(){
+  _scannerMode = false;
+  doBuscar();
 });
 
 /* ══ CÁMARA (celular) ══ */
@@ -1211,8 +1406,11 @@ function renderSaved(){
   show('inf-card'); g('inf-cnt').textContent = saved.length;
   var h = '';
   saved.forEach(function(r, i){
-    var lbl = !r.found ? 'No encontrado' : r.codeOk === true ? 'Cumple' : r.codeOk === false ? 'Hallazgo' : 'Revisar';
-    var cls = !r.found || r.codeOk === false ? 'bdg-fail' : r.codeOk === true ? 'bdg-ok' : 'bdg-warn';
+    /* Para LB: estado final incluye checklist */
+    var finalOk = r.mode==='lb' ? (r._codeOkBase && !r.chkHallazgo) : (r.codeOk!==false);
+    var lbl = !r.found ? 'No encontrado' : finalOk ? 'Cumple' : 'Hallazgo';
+    if(r.mode==='lb' && r.chkHallazgo) lbl = 'Hallazgo (checklist)';
+    var cls = !r.found || !finalOk ? 'bdg-fail' : 'bdg-ok';
     var sub = r.mode === 'lb'
       ? 'Folio: ' + (r.folio||'?')
       : 'V.leída:' + (r.versionLeida||'?') + ' | V.listado:' + (r.versionListado||'?');
@@ -1266,7 +1464,7 @@ function genPDF(){
   var recs=saved.length?saved:(curRes?[curRes]:[]);
   if(!recs.length){alert('No hay registros para el PDF');return;}
   var insp   =g('inspector').value.trim()||'No especificado';
-  var areaVal=g('area-inp').value.trim()||'No especificada';
+  var areaVal=(getPlanta()?getPlanta()+' / ':'')+getArea() || 'No especificada';
   var now    =new Date();
   var dateStr=now.toLocaleDateString('es-CO',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'-');
   var isLB   =recs[0]&&recs[0].mode==='lb';
@@ -1351,8 +1549,8 @@ function genPDF(){
     pageRecs.forEach(function(r,idx){
       if(y>276){return;} /* overflow guard */
       var globalIdx = pageRecs._offset + idx;
-      var isOk   = r.found && r.codeOk!==false;
-      var isHall = r.found && r.codeOk===false;
+      var isOk   = r.found && (r.mode==='lb' ? (r._codeOkBase && !r.chkHallazgo) : r.codeOk!==false);
+      var isHall = r.found && !isOk;
 
       /* fondo alterno */
       if(idx%2===0){doc.setFillColor(252,253,255);doc.rect(ml,y-1,cw,7,'F');}
