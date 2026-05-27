@@ -381,13 +381,17 @@ function setMode(m){
   show('hint-' + m, 'block');
   lg('Modo: ' + (m === 'cc' ? 'Copias Controladas' : 'Libros y Bitácoras'));
 
-  /* Cargar el Excel correspondiente si aún no está cargado */
+  /* SIEMPRE cargar ambos listados — el LB necesita el LM para verificar versiones */
+  if(!excelCC.length){ loadExcel(URL_CC, 'cc'); }
+  if(!excelLB.length){ loadExcel(URL_LB, 'lb'); }
+
+  /* Mostrar estado del listado principal del modo seleccionado */
   if(m === 'cc'){
     if(excelCC.length){ setXstat('ok', 'Listado Maestro listo', excelCC.length + ' documentos'); }
-    else { loadExcel(URL_CC, 'cc'); }
+    else { setXstat('loading', 'Cargando Listado Maestro...', 'Descargando LISTADO MAESTRO DE DOCUMENTOS.xlsx'); }
   } else {
     if(excelLB.length){ setXstat('ok', 'Listado Libros y Bitácoras listo', excelLB.length + ' registros'); }
-    else { loadExcel(URL_LB, 'lb'); }
+    else { setXstat('loading', 'Cargando Listado Libros y Bitácoras...', 'Descargando LISTADO LIBROS Y BITACORAS.xlsx'); }
   }
 }
 
@@ -428,8 +432,12 @@ function processBuffer(buf, target){
     if(target === 'cc'){ excelCC = data; }
     else               { excelLB = data; }
     var label = target === 'cc' ? 'Listado Maestro' : 'Libros y Bitácoras';
-    lg('OK: ' + data.length + ' registros (' + label + ') | Col0=' + (data[0]._raw[0]||'?') + ' | Col3=' + (data[0]._raw[3]||'?'));
-    setXstat('ok', label + ' listo · ' + data.length + ' registros', 'Cargado correctamente');
+    var sample = data[0]._raw;
+    lg('OK '+label+': '+data.length+' filas | ColA='+sample[0]+' | ColD='+sample[3]+' | ColF='+sample[5]+' | ColG='+sample[6]);
+    /* Solo actualizar el status si corresponde al modo activo */
+    if((target==='cc' && mode==='cc') || (target==='lb' && mode==='lb') || !mode){
+      setXstat('ok', label + ' listo · ' + data.length + ' registros', 'Cargado correctamente');
+    }
     hide('manual-load-wrap');
   } catch(err){
     lg('ERROR procesar Excel: ' + err.message);
@@ -492,169 +500,164 @@ function parseCodCC(raw){
 */
 function parseCodLB(raw){
   /*
-    FORMATOS DEL CÓDIGO DE BARRAS (Libros y Bitácoras):
-      BIT'0192'26'LCC-200   → codBIT: BIT'0192'26'LCC  folio: 200
-      BIT-0046-26-SOF/400   → codBIT: BIT-0046-26-SOF  folio: 400
-      BIT-0046-26-SOF-100   → codBIT: BIT-0046-26-SOF  folio: 100
+    CÓDIGO DE BARRAS Libros y Bitácoras:
+      BIT'0474'26'LST-300  → codBIT: BIT'0474'26'LST  folio: 300
+      BIT'0192'26'LCC-200  → codBIT: BIT'0192'26'LCC  folio: 200
+      BIT-0046-26-SOF/400  → codBIT: BIT-0046-26-SOF  folio: 400
 
-    REGLA:
-      - Si tiene "/": lo que va DESPUÉS es el folio
-      - Si no tiene "/": el ÚLTIMO bloque numérico al final (tras "-" o "'") es el folio
-        PERO solo si lo que queda antes contiene letras (para no confundir con parte del código)
+    ESTRUCTURA EXCEL LISTADO LB (fila 4=encabezados, fila 5+=datos):
+      Col A (idx 0) = Código de BIT
+      Col B (idx 1) = NOMBRE DEL FORMATO
+      Col C (idx 2) = ?
+      Col D (idx 3) = Código BIT completo  ← buscar aquí
+      Col E (idx 4) = ?
+      Col F (idx 5) = Código del Formato   ← ej: F-INST-0370-1  o  F-INST-0370-1 V02
+      Col G (idx 6) = Versión del Formato  ← ej: V02  o  2
+      Col M (idx 12)= ESTATUS
+      Col P (idx 15)= SIGLA / Cierre
   */
   var s = raw.trim().toUpperCase();
-  var folio = null;
-  var codeBIT = s;
+  var folio = null, codeBIT = s;
 
-  var slashIdx = s.lastIndexOf('/');
-  if(slashIdx > -1){
-    folio   = s.substring(slashIdx + 1).trim();
-    codeBIT = s.substring(0, slashIdx).trim();
+  /* Caso 1: tiene "/" → folio después del slash */
+  var si = s.lastIndexOf('/');
+  if(si > -1){
+    folio   = s.substring(si+1).trim();
+    codeBIT = s.substring(0, si).trim();
   } else {
-    /* Último segmento: solo dígitos, precedido por "-" o "'" */
-    var mEnd = s.match(/^(.*[A-Z]['\-])(\d+)$/);
-    if(mEnd){
-      folio   = mEnd[2];
-      codeBIT = s.substring(0, s.lastIndexOf(mEnd[2])).replace(/['\-]$/, '').trim();
+    /* Caso 2: último bloque numérico al final, precedido por letra+separador */
+    var mE = s.match(/^(.*[A-Z])['\-](\d+)$/);
+    if(mE){
+      folio   = mE[2];
+      codeBIT = s.substring(0, s.lastIndexOf(mE[2])).replace(/['\-]$/, '').trim();
     }
   }
 
-  /* Función para normalizar el código BIT para comparar:
-     Reemplaza comillas por guiones y convierte a mayúsculas */
-  function norm(v){ return v.toUpperCase().replace(/'/g,'-'); }
-
+  function normCode(v){ return v.toUpperCase().replace(/'/g,'-'); }
   lg('LB parseo → raw="'+raw+'" codeBIT="'+codeBIT+'" folio="'+(folio||'null')+'"');
-  return { codeBIT: codeBIT, codeBITnorm: norm(codeBIT), folio: folio, raw: raw };
+  return { codeBIT:codeBIT, codeBITnorm:normCode(codeBIT), folio:folio, raw:raw };
 }
 
 function searchLB(raw){
   var p = parseCodLB(raw);
-  lg('LB buscando codeBIT="'+p.codeBIT+'" norm="'+p.codeBITnorm+'" folio="'+(p.folio||'null')+'" en '+excelLB.length+' filas');
+  lg('LB buscando "'+p.codeBITnorm+'" folio="'+(p.folio||'null')+'" en '+excelLB.length+' filas');
 
-  for(var i = 0; i < excelLB.length; i++){
+  for(var i=0; i<excelLB.length; i++){
     var row    = excelLB[i];
-    var rawRow = row._raw || [];
+    var rr     = row._raw || [];
 
-    /* Buscar el código BIT en TODAS las columnas de la fila
-       El Excel puede tenerlo en col A con comillas: BIT'0192'26'LCC
-       o con guiones: BIT-0192-26-LCC */
-    var found = false;
-    for(var j = 0; j < rawRow.length; j++){
-      var cell = String(rawRow[j]||'').trim().toUpperCase().replace(/'/g,'-');
-      if(cell === p.codeBITnorm){ found = true; break; }
-    }
-    if(!found) continue;
+    /* Buscar código BIT en Col D (índice 3) principalmente, fallback todas las cols */
+    var colD = String(rr[3]||'').trim().toUpperCase().replace(/'/g,'-');
+    var match = (colD === p.codeBITnorm);
 
-    /* Si se detectó folio, verificar que coincida con col E (índice 4) */
-    if(p.folio){
-      var folioRow = String(rawRow[4]||'').trim();
-      /* Buscar también por nombre de columna */
-      if(!folioRow){
-        folioRow = String(
-          row['Numero de Folio']||row['Número de Folio']||row['N° Folio']||''
-        ).trim();
+    if(!match){
+      /* Buscar en todas las columnas como fallback */
+      for(var j=0; j<rr.length; j++){
+        if(String(rr[j]||'').trim().toUpperCase().replace(/'/g,'-') === p.codeBITnorm){
+          match=true; break;
+        }
       }
-      lg('LB folio excel="'+folioRow+'" vs escaneado="'+p.folio+'"');
-      if(folioRow && folioRow !== p.folio) continue;
+    }
+    if(!match) continue;
+
+    /* Verificar folio si fue detectado */
+    if(p.folio){
+      /* Buscar folio en todas las columnas numéricas */
+      var folioFound = false;
+      for(var j=0; j<rr.length; j++){
+        if(String(rr[j]||'').trim() === p.folio){ folioFound=true; break; }
+      }
+      if(!folioFound){ lg('LB folio '+p.folio+' no coincide en fila '+(i+5)); continue; }
     }
 
-    lg('LB MATCH en fila '+(i+5));
+    lg('LB MATCH fila '+(i+5));
     return buildLB(p, row, i);
   }
-
   lg('LB NO encontrado: "'+p.codeBITnorm+'"');
   return { found:false, row:null, raw:raw, base:p.codeBIT, folio:p.folio, mode:'lb' };
 }
 
 function buildLB(p, row, idx){
-  var rawRow = row._raw || [];
-
+  var rr = row._raw || [];
   /*
-    ESTRUCTURA DEL EXCEL LISTADO LIBROS Y BITÁCORAS:
-    Col A (idx 0) = Código de BIT         → BIT'0192'26'LCC  o  BIT-0046-26-SOF
-    Col B (idx 1) = NOMBRE DEL FORMATO    → REGISTRO DE ACTIVIDADES...
-    Col C (idx 2) = Código del Formato    → F-INST-0370-1  o  F-INST-0370-1 V02
-    Col D (idx 3) = Versión del Formato   → V02  o  02  o  2
-    Col E (idx 4) = Numero de Folio       → 100, 200, 400...
-    Col M (idx 12)= ESTATUS               → Vigente / Cerrado / Obsoleto
-    Col P (idx 15)= SIGLA                 → BIT 26  (o "Cerrado" si está retirado)
+    Col D (idx 3) = Código BIT (ya encontrado)
+    Col F (idx 5) = Código del Formato → "F-INST-0370-1" o "F-INST-0370-1 V02"
+    Col G (idx 6) = Versión del Formato → "V02" o "2" o "02"
+    Col M (idx 12)= ESTATUS
+    Col P (idx 15)= SIGLA/Cierre
   */
+  var nombreForm = String(rr[1]||'').trim();
 
-  var nombreForm = String(rawRow[1]||'').trim();
+  /* Col F: puede traer código solo o código+versión */
+  var colF = String(rr[5]||'').trim();
+  var codFormato = colF, verDesdeF = '';
+  var mF = colF.match(/^(.+?)\s+(V\d+)$/i);
+  if(mF){ codFormato = mF[1].trim(); verDesdeF = mF[2].trim(); }
 
-  /* Col C: "F-INST-0370-1" o "F-INST-0370-1 V02" — extraer código y versión */
-  var colC       = String(rawRow[2]||'').trim();
-  var codFormato = colC;
-  var verDesdeC  = '';
-  /* Separar si hay versión al final: "F-INST-0370-1 V02" → código="F-INST-0370-1", ver="V02" */
-  var mVer = colC.match(/^(.+?)\s+(V\d+)$/i);
-  if(mVer){ codFormato = mVer[1].trim(); verDesdeC = mVer[2].trim(); }
+  /* Col G: versión explícita */
+  var colG = String(rr[6]||'').trim();
+  var verFormato = colG || verDesdeF;
 
-  /* Col D: versión explícita */
-  var colD = String(rawRow[3]||'').trim();
-  /* Solo usar colD como versión si NO parece un código BIT */
-  var verFormato = (!colD || colD.toUpperCase().startsWith('BIT')) ? verDesdeC : (colD || verDesdeC);
+  var folioExcel = '';
+  /* Buscar folio en la fila (es un número que coincida con el escaneado) */
+  if(p.folio){
+    folioExcel = p.folio; /* ya verificado en searchLB */
+  } else {
+    /* Intentar col E (idx 4) */
+    folioExcel = String(rr[4]||'').trim();
+  }
 
-  var folioExcel = String(rawRow[4]||'').trim();
-  var estatus    = String(rawRow[12]||'').trim();
-  var colPVal    = String(rawRow[15]||'').trim();
-
+  var estatus  = String(rr[12]||'').trim();
+  var colPVal  = String(rr[15]||'').trim();
   var obsoleto = estatus.toUpperCase().includes('OBSOLE');
   var cerrado  = colPVal.toUpperCase().includes('CERRADO') || estatus.toUpperCase().includes('CERRAD');
 
-  /* ── BUSCAR código de formato en el Listado Maestro (CC) ── */
-  var rowMaestro        = null;
-  var verEnMaestro      = '';
-  var estadoEnMaestro   = '';
-  var obsoletoenMaestro = false;
-
+  /* ── Buscar código de formato en Listado Maestro ── */
+  var rowMaestro = null, verEnMaestro = '', estadoEnMaestro = '', obsoletoEnMaestro = false;
   if(codFormato && excelCC.length){
-    var COLS_CC = ['Código Actual','Codigo Actual','Código Anterior','Codigo Anterior'];
-    var cfNorm  = codFormato.toUpperCase().trim();
+    var cfNorm = codFormato.toUpperCase().trim();
+    var CC_COLS = ['Código Actual','Codigo Actual','Código Anterior','Codigo Anterior'];
     outer:
-    for(var ci = 0; ci < COLS_CC.length; ci++){
-      for(var ri = 0; ri < excelCC.length; ri++){
-        var ccVal = String(excelCC[ri][COLS_CC[ci]]||'').trim().toUpperCase();
-        if(ccVal === cfNorm){
-          rowMaestro        = excelCC[ri];
-          verEnMaestro      = String(excelCC[ri]['Versión']||excelCC[ri]['Version']||'').trim();
-          estadoEnMaestro   = String(excelCC[ri]['Estado']||'').trim();
-          obsoletoenMaestro = estadoEnMaestro.toUpperCase().includes('OBSOLE');
-          lg('LB → formato "'+codFormato+'" encontrado en LM: ver='+verEnMaestro+' estado='+estadoEnMaestro);
+    for(var ci=0; ci<CC_COLS.length; ci++){
+      for(var ri=0; ri<excelCC.length; ri++){
+        if(String(excelCC[ri][CC_COLS[ci]]||'').trim().toUpperCase() === cfNorm){
+          rowMaestro      = excelCC[ri];
+          verEnMaestro    = String(excelCC[ri]['Versión']||excelCC[ri]['Version']||'').trim();
+          estadoEnMaestro = String(excelCC[ri]['Estado']||'').trim();
+          obsoletoEnMaestro = estadoEnMaestro.toUpperCase().includes('OBSOLE');
+          lg('LB→LM: "'+codFormato+'" ver='+verEnMaestro+' estado='+estadoEnMaestro);
           break outer;
         }
       }
     }
-    if(!rowMaestro) lg('LB → formato "'+codFormato+'" NO encontrado en Listado Maestro');
+    if(!rowMaestro) lg('LB→LM: "'+codFormato+'" NO encontrado en Listado Maestro');
   }
 
-  /* Comparar versión: normalizar V02, 02, 2 → todos son 2 */
+  /* Comparar versiones normalizando V02=02=2 */
   function normVer(v){ var n=parseInt(String(v).replace(/[^0-9]/g,'')); return isNaN(n)?'':String(n); }
-  var verOk = null, verMsg = '';
+  var verOk=null, verMsg='';
   if(verFormato && verEnMaestro){
-    if(normVer(verFormato) === normVer(verEnMaestro)){
-      verOk = true;
-      verMsg = 'Versión '+verFormato+' coincide con Listado Maestro ✓';
+    if(normVer(verFormato)===normVer(verEnMaestro)){
+      verOk=true;  verMsg='Versión '+verFormato+' coincide con el Listado Maestro ✓';
     } else {
-      verOk = false;
-      verMsg = 'HALLAZGO: versión en libro '+verFormato+' ≠ versión en Listado Maestro '+verEnMaestro;
+      verOk=false; verMsg='HALLAZGO: versión en libro '+verFormato+' ≠ versión en Listado Maestro '+verEnMaestro;
     }
   } else if(!excelCC.length){
-    verMsg = 'Carga el Listado Maestro (Copias Controladas) para verificar la versión del formato';
-  } else if(!rowMaestro){
-    verMsg = 'Formato '+codFormato+' no encontrado en el Listado Maestro';
+    verMsg='El Listado Maestro no está cargado aún';
+  } else if(!rowMaestro && codFormato){
+    verMsg='Formato '+codFormato+' no encontrado en el Listado Maestro';
   }
 
-  var codeOk = !obsoleto && !cerrado && !obsoletoenMaestro && verOk !== false;
+  var codeOk = !obsoleto && !cerrado && !obsoletoEnMaestro && verOk!==false;
 
-  lg('buildLB: codBIT='+p.codeBIT+' codF='+codFormato+' verF='+verFormato+' verMaestro='+verEnMaestro+' estatus='+estatus+' cerrado='+cerrado+' verOk='+verOk);
+  lg('buildLB: codBIT='+p.codeBIT+' colF="'+colF+'" codF='+codFormato+' verF='+verFormato+' verLM='+verEnMaestro+' estatus='+estatus+' cerrado='+cerrado+' verOk='+verOk);
   return {
-    found: true, codeOk: codeOk, row: row, raw: p.raw,
-    base: p.codeBIT, folio: p.folio, folioExcel: folioExcel,
-    nombreForm: nombreForm, codFormato: codFormato, verFormato: verFormato,
-    verEnMaestro: verEnMaestro, estadoEnMaestro: estadoEnMaestro,
-    obsoletoenMaestro: obsoletoenMaestro, verOk: verOk, verMsg: verMsg,
-    estatus: estatus, obsoleto: obsoleto, cerrado: cerrado, colPVal: colPVal, mode: 'lb'
+    found:true, codeOk:codeOk, row:row, raw:p.raw,
+    base:p.codeBIT, folio:p.folio, folioExcel:folioExcel,
+    nombreForm:nombreForm, codFormato:codFormato, verFormato:verFormato,
+    verEnMaestro:verEnMaestro, estadoEnMaestro:estadoEnMaestro,
+    obsoletoEnMaestro:obsoletoEnMaestro, verOk:verOk, verMsg:verMsg,
+    estatus:estatus, obsoleto:obsoleto, cerrado:cerrado, colPVal:colPVal, mode:'lb'
   };
 }
 
@@ -735,8 +738,8 @@ function buildResultCC(res, ts){
 function buildResultLB(res, ts){
   if(!res.found){
     return '<div class="res-fail"><span class="big">❌</span><h2>NO ENCONTRADO</h2>'
-      +'<p>Código <strong>'+res.base+'</strong> · Folio <strong>'+(res.folio||'?')+'</strong> no encontrado en el listado</p></div>'
-      +'<div class="card"><div class="card-h"><em>⚠️</em> Información</div><div class="card-b"><table class="dtbl">'
+      +'<p>Código <strong>'+res.base+'</strong> · Folio <strong>'+(res.folio||'No detectado')+'</strong><br>no encontrado en el Listado de Libros y Bitácoras</p></div>'
+      +'<div class="card"><div class="card-h"><em>⚠️</em> Detalle de la consulta</div><div class="card-b"><table class="dtbl">'
       +'<tr><td>Código escaneado</td><td>'+res.raw+'</td></tr>'
       +'<tr><td>Código BIT buscado</td><td>'+res.base+'</td></tr>'
       +'<tr><td>Folio detectado</td><td>'+(res.folio||'No detectado')+'</td></tr>'
@@ -746,48 +749,53 @@ function buildResultLB(res, ts){
 
   var h = '';
 
-  /* ── ALERTAS PRIORITARIAS ── */
+  /* ── ALERTAS ── */
   if(res.cerrado){
-    h += '<div class="alert-obsoleto">🔴 RETIRO DEL LIBRO: Este libro/bitácora está CERRADO en el listado. Debe ser retirado del área de inmediato.</div>';
+    h += '<div class="alert-obsoleto">🔴 RETIRO DEL LIBRO: Este libro/bitácora está CERRADO. Debe ser retirado del área de inmediato.</div>';
   }
-  if(res.obsoleto || res.obsoletoenMaestro){
-    h += '<div class="alert-obsoleto">⛔ FORMATO OBSOLETO: El formato asociado ('+(res.codFormato||'?')+') está marcado como OBSOLETO en el Listado Maestro. No debe estar en uso.</div>';
+  if(res.obsoleto || res.obsoletoEnMaestro){
+    h += '<div class="alert-obsoleto">⛔ FORMATO OBSOLETO: El formato <strong>'+res.codFormato+'</strong> está marcado como OBSOLETO en el Listado Maestro.</div>';
   }
   if(res.verOk === false){
-    h += '<div class="alert-version">⚠️ VERSIÓN INCORRECTA: El libro usa la versión <strong>'+res.verFormato+'</strong> del formato '+res.codFormato+', pero el Listado Maestro indica la versión <strong>'+res.verEnMaestro+'</strong>.</div>';
+    h += '<div class="alert-version">⚠️ VERSIÓN INCORRECTA: El libro tiene versión <strong>'+res.verFormato+'</strong> del formato '+res.codFormato+', pero el Listado Maestro indica versión <strong>'+res.verEnMaestro+'</strong>.</div>';
   }
 
-  /* ── BANNER RESULTADO ── */
+  /* ── BANNER ── */
   if(res.codeOk){
     h += '<div class="res-ok"><span class="big">✅</span><h2>EN CUMPLIMIENTO</h2>'
-      +'<p>Libro <strong>'+res.base+'</strong> · Folio <strong>'+(res.folio||'—')+'</strong> · Formato vigente y versión correcta</p></div>';
+      +'<p>Libro <strong>'+res.base+'</strong> · Folio <strong>'+(res.folio||res.folioExcel||'—')+'</strong></p></div>';
   } else {
     h += '<div class="res-fail"><span class="big">⚠️</span><h2>HALLAZGO</h2>'
-      +'<p>Libro <strong>'+res.base+'</strong> · Folio <strong>'+(res.folio||'—')+'</strong></p></div>';
+      +'<p>Libro <strong>'+res.base+'</strong> · Folio <strong>'+(res.folio||res.folioExcel||'—')+'</strong></p></div>';
   }
 
-  /* ── DETALLE ── */
   var vc = res.verOk===true?'ver-ok':res.verOk===false?'ver-fail':'';
-  h += '<div class="card"><div class="card-h"><em>📒</em> Detalle del libro / bitácora</div><div class="card-b"><table class="dtbl">'
-    +'<tr><td>Código BIT</td><td>'+res.base+'</td></tr>'
+
+  /* ── TARJETA 1: LIBRO/BITÁCORA ── */
+  h += '<div class="card"><div class="card-h"><em>📒</em> Datos del libro / bitácora</div><div class="card-b"><table class="dtbl">'
+    +'<tr><td>Código BIT</td><td style="font-weight:700">'+res.base+'</td></tr>'
     +'<tr><td>Nombre del formato</td><td>'+res.nombreForm+'</td></tr>'
     +'<tr><td>Folio escaneado</td><td>'+(res.folio||'—')+'</td></tr>'
     +'<tr><td>Folio en listado</td><td>'+res.folioExcel+'</td></tr>'
-    +'<tr><td>Estatus libro</td><td style="font-weight:700;color:'+(res.cerrado||res.obsoleto?'#b91c1c':'#065f46')+'">'+res.estatus+'</td></tr>'
-    +(res.colPVal?'<tr><td>Col P (cierre)</td><td style="color:#b91c1c;font-weight:700">'+res.colPVal+'</td></tr>':'')
-    +'</table></div></div>'
+    +'<tr><td>Estatus</td><td style="font-weight:700;color:'+(res.cerrado||res.obsoleto?'#b91c1c':'#065f46')+'">'+res.estatus+'</td></tr>'
+    +(res.colPVal?'<tr><td>Registro cierre</td><td style="font-weight:700;color:#b91c1c">'+res.colPVal+'</td></tr>':'')
+    +'</table></div></div>';
 
-    +'<div class="card"><div class="card-h"><em>📄</em> Formato asociado (verificado en Listado Maestro)</div><div class="card-b"><table class="dtbl">'
-    +'<tr><td>Código del formato</td><td style="font-weight:700">'+res.codFormato+'</td></tr>'
-    +'<tr><td>Versión en el libro (col C/D)</td><td class="'+vc+'" style="font-weight:700">'+(res.verFormato||'No detectada')+'</td></tr>'
-    +(res.verEnMaestro?'<tr><td>Versión en Listado Maestro</td><td class="'+vc+'" style="font-weight:700">'+res.verEnMaestro+'</td></tr>':'<tr><td>Versión en Listado Maestro</td><td style="color:#b45309">No encontrado en LM</td></tr>')
-    +(res.estadoEnMaestro?'<tr><td>Estado en Listado Maestro</td><td style="font-weight:700;color:'+(res.obsoletoenMaestro?'#b91c1c':'#065f46')+'">'+res.estadoEnMaestro+'</td></tr>':'')
-    +(res.verMsg?'<tr><td>Resultado verificación</td><td class="'+vc+'">'+res.verMsg+'</td></tr>':'')
+  /* ── TARJETA 2: FORMATO EN LISTADO MAESTRO ── */
+  h += '<div class="card"><div class="card-h"><em>📄</em> Verificación del formato en Listado Maestro</div><div class="card-b"><table class="dtbl">'
+    +'<tr><td>Código del formato (col F)</td><td style="font-weight:700">'+res.codFormato+'</td></tr>'
+    +'<tr><td>Versión en el libro (col G)</td><td class="'+vc+'" style="font-weight:700">'+(res.verFormato||'No detectada')+'</td></tr>'
+    +(res.verEnMaestro
+      ?'<tr><td>Versión en Listado Maestro</td><td class="'+vc+'" style="font-weight:700">'+res.verEnMaestro+'</td></tr>'
+      :'<tr><td>Versión en Listado Maestro</td><td style="color:#b45309;font-weight:600">No encontrado en LM — verifica el código del formato</td></tr>')
+    +(res.estadoEnMaestro?'<tr><td>Estado en Listado Maestro</td><td style="font-weight:700;color:'+(res.obsoletoEnMaestro?'#b91c1c':'#065f46')+'">'+res.estadoEnMaestro+'</td></tr>':'')
+    +(res.verMsg?'<tr><td>Resultado verificación</td><td class="'+vc+'" style="font-weight:600">'+res.verMsg+'</td></tr>':'')
     +'<tr><td>Consultado</td><td>'+ts+'</td></tr>'
     +'</table></div></div>';
 
   return h;
 }
+
 
 /* ══ BUSCAR ══ */
 function doBuscar(){
