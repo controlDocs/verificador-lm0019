@@ -433,30 +433,37 @@ function processBuffer(buf, target){
     var wb = XLSX.read(new Uint8Array(buf), { type: 'array' });
     var ws = wb.Sheets[wb.SheetNames[0]];
     var raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
-    /* Encabezados en fila 4 (índice 3), datos desde fila 5 (índice 4) */
+    /* Encabezados en fila 4 (índice 3), datos desde fila 5 (índice 4) — aplica para ambos listados */
     var hdrs = (raw[3] || []).map(function(h){ return String(h || '').trim(); });
-    lg('Encabezados (' + target + '): ' + hdrs.filter(Boolean).slice(0, 8).join(' | '));
+    lg('Hdrs['+target+']: ' + hdrs.filter(Boolean).slice(0,10).join(' | '));
     var data = [];
     for(var i = 4; i < raw.length; i++){
       var row = raw[i] || [];
-      if(row.every(function(c){ return c === '' || c === null || c === undefined; })) continue;
-      var obj = { _raw: row }; /* guardar fila raw para acceso por índice */
-      hdrs.forEach(function(h, j){ if(h) obj[h] = String(row[j] !== undefined ? row[j] : '').trim(); });
+      if(row.every(function(c){ return c===''||c===null||c===undefined; })) continue;
+      var obj = { _raw: row };
+      hdrs.forEach(function(h, j){ if(h) obj[h] = String(row[j]!==undefined ? row[j] : '').trim(); });
       data.push(obj);
     }
     if(!data.length) throw new Error('Sin datos desde fila 5');
     if(target === 'cc'){ excelCC = data; }
     else               { excelLB = data; }
-    var label = target === 'cc' ? 'Listado Maestro' : 'Libros y Bitácoras';
+    var label  = target === 'cc' ? 'Listado Maestro' : 'Libros y Bitácoras';
     var sample = data[0]._raw;
-    lg('✅ '+label+' ('+target+'): '+data.length+' filas');
-    lg('  ColA="'+sample[0]+'" ColD="'+sample[3]+'" ColF="'+sample[5]+'" ColG="'+sample[6]+'"');
-    /* Actualizar status si el modo activo corresponde a este listado */
+    lg('✅ '+label+': '+data.length+' filas | A="'+sample[0]+'" D="'+sample[3]+'" F="'+sample[5]+'" G="'+sample[6]+'"');
+    if(target==='cc') lg('  LM ColA(CódActual)="'+sample[0]+'" ColD(Versión)="'+sample[3]+'" ColK(Estado)="'+sample[10]+'"');
+    if(target==='lb') lg('  LB ColD(CódBIT)="'+sample[3]+'" ColF(Formato)="'+sample[5]+'" ColG(Versión)="'+sample[6]+'"');
     if(target==='cc' && mode==='cc'){
-      setXstat('ok', 'Listado Maestro listo · '+data.length+' documentos', 'Ambos listados disponibles');
+      setXstat('ok','Listado Maestro listo · '+data.length+' documentos',
+        excelLB.length ? 'Ambos listados cargados ✓' : 'Cargando Libros y Bitácoras...');
     } else if(target==='lb' && mode==='lb'){
-      setXstat('ok', 'Listado Libros y Bitácoras · '+data.length+' registros', 'Ambos listados disponibles');
+      setXstat('ok','Listado Libros y Bitácoras · '+data.length+' registros',
+        excelCC.length ? 'Ambos listados cargados ✓' : 'Cargando Listado Maestro...');
     }
+    /* Si el otro listado ya cargó, actualizar mensaje */
+    if(target==='cc' && excelLB.length && mode==='lb')
+      setXstat('ok','Listado Libros y Bitácoras · '+excelLB.length+' registros','Ambos listados cargados ✓');
+    if(target==='lb' && excelCC.length && mode==='cc')
+      setXstat('ok','Listado Maestro listo · '+excelCC.length+' documentos','Ambos listados cargados ✓');
     hide('manual-load-wrap');
   } catch(err){
     lg('ERROR procesar Excel: ' + err.message);
@@ -632,45 +639,47 @@ function buildLB(p, row, idx){
   var cerrado  = colPVal.toUpperCase().includes('CERRADO') || estatus.toUpperCase().includes('CERRAD');
 
   /* ── Buscar código de formato en Listado Maestro ── */
-  var rowMaestro = null, verEnMaestro = '', estadoEnMaestro = '', obsoletoEnMaestro = false;
+  var rowMaestro = null, verEnMaestro = '', estadoEnMaestro = '', descEnMaestro = '', obsoletoEnMaestro = false;
   if(codFormato && excelCC.length){
     var cfNorm = codFormato.toUpperCase().trim();
-    lg('LB→LM: buscando formato "'+cfNorm+'" en '+excelCC.length+' registros del LM');
-    var CC_COLS = ['Código Actual','Codigo Actual','Código Anterior','Codigo Anterior'];
-    /* Buscar primero por columnas de código */
-    outer:
-    for(var ci=0; ci<CC_COLS.length; ci++){
-      for(var ri=0; ri<excelCC.length; ri++){
-        if(String(excelCC[ri][CC_COLS[ci]]||'').trim().toUpperCase() === cfNorm){
-          rowMaestro        = excelCC[ri];
-          verEnMaestro      = String(excelCC[ri]['Versión']||excelCC[ri]['Version']||
-                                     excelCC[ri]._raw&&excelCC[ri]._raw[3]||'').trim();
-          estadoEnMaestro   = String(excelCC[ri]['Estado']||
-                                     excelCC[ri]._raw&&excelCC[ri]._raw[10]||'').trim();
-          obsoletoEnMaestro = estadoEnMaestro.toUpperCase().includes('OBSOLE') ||
-                              String(excelCC[ri]['Obsoleto']||'').toUpperCase().includes('SI');
-          lg('LB→LM ENCONTRADO: "'+codFormato+'" ver="'+verEnMaestro+'" estado="'+estadoEnMaestro+'"');
-          break outer;
-        }
+    lg('LB→LM: buscando "'+cfNorm+'" en '+excelCC.length+' registros');
+    /* Buscar por raw col A (índice 0) = "Código Actual" — el más confiable */
+    for(var ri=0; ri<excelCC.length; ri++){
+      var ccRaw = excelCC[ri]._raw || [];
+      var colAval = String(ccRaw[0]||'').trim().toUpperCase();
+      if(colAval === cfNorm){
+        rowMaestro        = excelCC[ri];
+        verEnMaestro      = String(ccRaw[3]||'').trim();   /* col D = Versión */
+        descEnMaestro     = String(ccRaw[2]||'').trim();   /* col C = Descripción */
+        estadoEnMaestro   = String(ccRaw[10]||'').trim();  /* col K = Estado */
+        obsoletoEnMaestro = estadoEnMaestro.toUpperCase().includes('OBSOLE') ||
+                            String(ccRaw[11]||'').toUpperCase().includes('SI'); /* col L = Obsoleto */
+        lg('LB→LM ✅ "'+cfNorm+'" ver="'+verEnMaestro+'" estado="'+estadoEnMaestro+'"');
+        break;
       }
     }
-    /* Fallback: buscar en RAW col A (índice 0) */
+    /* Fallback: buscar por nombre de columna (por si la alineación varía) */
     if(!rowMaestro){
-      for(var ri=0; ri<excelCC.length; ri++){
-        var ccRaw = excelCC[ri]._raw || [];
-        if(String(ccRaw[0]||'').trim().toUpperCase() === cfNorm){
-          rowMaestro        = excelCC[ri];
-          verEnMaestro      = String(ccRaw[3]||'').trim();
-          estadoEnMaestro   = String(ccRaw[10]||'').trim();
-          obsoletoEnMaestro = estadoEnMaestro.toUpperCase().includes('OBSOLE');
-          lg('LB→LM ENCONTRADO (raw colA): "'+codFormato+'" ver="'+verEnMaestro+'" estado="'+estadoEnMaestro+'"');
-          break;
+      var CC_COLS = ['Código Actual','Codigo Actual'];
+      outer2:
+      for(var ci=0; ci<CC_COLS.length; ci++){
+        for(var ri=0; ri<excelCC.length; ri++){
+          if(String(excelCC[ri][CC_COLS[ci]]||'').trim().toUpperCase() === cfNorm){
+            rowMaestro        = excelCC[ri];
+            var rr2           = excelCC[ri]._raw||[];
+            verEnMaestro      = String(excelCC[ri]['Versión']||excelCC[ri]['Version']||rr2[3]||'').trim();
+            descEnMaestro     = String(excelCC[ri]['Descripción']||excelCC[ri]['Descripcion']||rr2[2]||'').trim();
+            estadoEnMaestro   = String(excelCC[ri]['Estado']||rr2[10]||'').trim();
+            obsoletoEnMaestro = estadoEnMaestro.toUpperCase().includes('OBSOLE');
+            lg('LB→LM ✅ (byName) "'+cfNorm+'" ver="'+verEnMaestro+'" estado="'+estadoEnMaestro+'"');
+            break outer2;
+          }
         }
       }
     }
-    if(!rowMaestro) lg('LB→LM NO encontrado: "'+cfNorm+'" — verifica el código en col F del LB');
+    if(!rowMaestro) lg('LB→LM ❌ "'+cfNorm+'" NO encontrado — revisa col F del LB y col A del LM');
   } else if(!excelCC.length){
-    lg('LB→LM: Listado Maestro aún no cargado');
+    lg('LB→LM: Listado Maestro aún no cargado (espera unos segundos)');
   }
 
   /* Comparar versiones normalizando V02=02=2 */
@@ -696,6 +705,7 @@ function buildLB(p, row, idx){
     base:p.codeBIT, folio:p.folio, folioExcel:folioExcel,
     nombreForm:nombreForm, codFormato:codFormato, verFormato:verFormato,
     verEnMaestro:verEnMaestro, estadoEnMaestro:estadoEnMaestro,
+    descEnMaestro:descEnMaestro||nombreForm,
     obsoletoEnMaestro:obsoletoEnMaestro, verOk:verOk, verMsg:verMsg,
     estatus:estatus, obsoleto:obsoleto, cerrado:cerrado, colPVal:colPVal, mode:'lb'
   };
@@ -1036,113 +1046,133 @@ g('btn-mail').addEventListener('click', function(){
 });
 
 function genPDF(){
-  if(typeof window.jspdf === 'undefined'){ waitLib(function(){ return typeof window.jspdf !== 'undefined'; }, genPDF); return; }
-  var recs = saved.length ? saved : (curRes ? [curRes] : []);
-  if(!recs.length){ alert('No hay registros para el PDF'); return; }
-  var insp  = g('inspector').value.trim() || 'No especificado';
-  var area  = g('area-inp').value.trim() || 'No especificada';
-  var now   = new Date().toLocaleString('es-CO');
-  var total = recs.length, ok = recs.filter(function(r){ return r.found && r.codeOk !== false; }).length;
-  var fail  = total - ok, pct = total ? Math.round(ok / total * 100) : 0;
-  var tipoLabel = (recs[0] && recs[0].mode === 'lb') ? 'Libros y Bitácoras' : 'Copias Controladas';
-  var jsPDF = window.jspdf.jsPDF;
-  var doc = new jsPDF({ unit:'mm', format:'a4' });
+  if(typeof window.jspdf==='undefined'){waitLib(function(){return typeof window.jspdf!=='undefined';},genPDF);return;}
+  var recs=saved.length?saved:(curRes?[curRes]:[]);
+  if(!recs.length){alert('No hay registros para el PDF');return;}
+  var insp=g('inspector').value.trim()||'No especificado';
+  var areaVal=g('area-inp').value.trim()||'No especificada';
+  var now=new Date();
+  var dateStr=now.toLocaleDateString('es-CO',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'-');
+  var isLB=recs[0]&&recs[0].mode==='lb';
+  var tipoLabel=isLB?'Libros y Bitácoras':'Copias Controladas';
+  var total=recs.length,ok=recs.filter(function(r){return r.found&&r.codeOk!==false;}).length;
+  var fail=total-ok,pct=total?Math.round(ok/total*100):0;
+  var jsPDF=window.jspdf.jsPDF;
+  var doc=new jsPDF({unit:'mm',format:'a4'});
+  var W=210,ml=14,mr=196,cw=W-ml*2;
 
-  /* ENCABEZADO */
-  doc.setFillColor(26,58,92); doc.rect(0,0,210,40,'F');
-  doc.setFillColor(15,110,86); doc.rect(0,36,210,6,'F');
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(17); doc.setFont('helvetica','bold');
-  doc.text('INFORME DE INSPECCIÓN', 14, 14);
-  doc.setFontSize(10); doc.setFont('helvetica','normal');
-  doc.text(tipoLabel + '  ·  Grupo Procaps', 14, 22);
-  doc.setFontSize(9);
-  doc.text('Inspector: ' + insp + '   |   Área: ' + area + '   |   ' + now, 14, 30);
+  /* HEADER */
+  doc.setFillColor(26,58,92);doc.rect(0,0,W,22,'F');
+  doc.setFillColor(15,110,86);doc.rect(0,22,W,5,'F');
+  doc.setFillColor(245,247,250);doc.rect(0,27,W,18,'F');
+  doc.setDrawColor(220,224,230);doc.line(0,45,W,45);
+  doc.setFontSize(10);doc.setFont('helvetica','normal');doc.setTextColor(255,255,255);
+  doc.text('Grupo Procaps',ml,9);
+  doc.setFontSize(14);doc.setFont('helvetica','bold');
+  doc.text('INFORME DE VERIFICACION — '+areaVal.toUpperCase(),ml,17);
+  doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(80,100,120);
+  doc.text('Area: '+areaVal+' · Tipo: '+tipoLabel,ml,33);
+  doc.text('INF-VER-'+dateStr+'-'+areaVal.replace(/\s+/g,'-')+' · '+dateStr+' · Inspector: '+insp,ml,39);
+
+  var y=52;
 
   /* CAJAS RESUMEN */
-  var y = 50; doc.setTextColor(20,20,20);
-  doc.setFont('helvetica','bold'); doc.setFontSize(11);
-  doc.text('RESUMEN DE LA INSPECCIÓN', 14, y); y += 6;
-  doc.setDrawColor(210,210,210); doc.line(14, y, 196, y); y += 8;
-  var boxes = [
-    { l:'Documentos leídos', v:String(total), c:[26,58,92] },
-    { l:'En cumplimiento',   v:String(ok),    c:[6,95,70]  },
-    { l:'Hallazgos',         v:String(fail),  c:[153,27,27]},
-    { l:'% Cumplimiento',    v:pct+'%',       c:[91,33,182]}
+  var boxes=[
+    {v:String(total),l:'EN INVENTARIO',bg:[26,58,92]},
+    {v:String(ok),l:'COPIAS OK',bg:[15,110,86]},
+    {v:String(fail),l:'HALLAZGOS',bg:[163,45,45]},
+    {v:pct+'%',l:'CUMPLIMIENTO',bg:[91,33,182]}
   ];
-  var bx = 14, bw = 43, bh = 20;
+  var bw=(cw-9)/4,bh=20,bx=ml;
   boxes.forEach(function(b){
-    doc.setFillColor(b.c[0],b.c[1],b.c[2]);
-    doc.roundedRect(bx, y, bw, bh, 2, 2, 'F');
+    doc.setFillColor(b.bg[0],b.bg[1],b.bg[2]);
+    doc.roundedRect(bx,y,bw,bh,2,2,'F');
     doc.setTextColor(255,255,255);
-    doc.setFont('helvetica','bold'); doc.setFontSize(14);
-    doc.text(b.v, bx+bw/2, y+11, { align:'center' });
-    doc.setFontSize(7); doc.setFont('helvetica','normal');
-    doc.text(b.l, bx+bw/2, y+17, { align:'center' });
-    bx += bw + 3;
+    doc.setFontSize(16);doc.setFont('helvetica','bold');
+    doc.text(b.v,bx+bw/2,y+11,{align:'center'});
+    doc.setFontSize(6.5);doc.setFont('helvetica','bold');
+    doc.text(b.l,bx+bw/2,y+17,{align:'center'});
+    bx+=bw+3;
   });
-  y += bh + 12;
+  y+=bh+8;
 
-  /* DETALLE */
-  doc.setTextColor(20,20,20);
-  doc.setFont('helvetica','bold'); doc.setFontSize(11);
-  doc.text('DETALLE DE DOCUMENTOS INSPECCIONADOS', 14, y); y += 6;
-  doc.setDrawColor(210,210,210); doc.line(14, y, 196, y); y += 8;
+  /* TABLA ENCABEZADO */
+  doc.setFillColor(240,243,248);doc.rect(ml,y,cw,7,'F');
+  doc.setDrawColor(200,210,220);doc.line(ml,y,mr,y);doc.line(ml,y+7,mr,y+7);
+  doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(80,100,130);
 
-  recs.forEach(function(r, idx){
-    if(y > 252){ doc.addPage(); y = 20; }
-    var cumple = r.found && r.codeOk !== false;
-    if(cumple){ doc.setFillColor(236,253,245); doc.setDrawColor(5,150,105); }
-    else       { doc.setFillColor(254,242,242); doc.setDrawColor(220,38,38); }
-    doc.roundedRect(14, y, 182, 16, 2, 2, 'FD');
-    doc.setFont('helvetica','bold'); doc.setFontSize(11);
-    doc.setTextColor(cumple ? 6:153, cumple ? 95:27, cumple ? 70:27);
-    var est = cumple ? '✓ CUMPLE' : '✗ HALLAZGO';
-    if(!r.found) est = '✗ NO ENCONTRADO';
-    doc.text(est + '  |  ' + r.base, 16, y + 11);
-    y += 22; doc.setTextColor(20,20,20);
-
-    var filas = [];
-    if(r.mode === 'cc'){
-      filas = [
-        ['Código:', r.base],
-        ['Descripción:', r.row ? (r.row['Descripción']||r.row['Descripcion']||'—') : '—'],
-        ['Versión leída:', String(r.versionLeida||'No detectada')],
-        ['Versión listado:', String(r.versionListado||'—')],
-        ['Verificación versión:', r.versionMsg||'—'],
-        ['Estado:', r.estado||'—'],
-      ];
-    } else {
-      filas = [
-        ['Código bitácora:', r.base],
-        ['Folio:', r.folio||'—'],
-        ['Formato (col. F):', r.formato||'—'],
-        ['Versión formato (col. G):', r.verFormato||'—'],
-        ['Estado:', r.estado||'—'],
-      ];
-    }
-    filas.forEach(function(f){
-      if(y > 272){ doc.addPage(); y = 20; }
-      doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.text(f[0], 18, y);
-      doc.setFont('helvetica','normal');
-      if((f[0].includes('Versión') || f[0].includes('version')) && !cumple){ doc.setTextColor(180,30,30); }
-      else { doc.setTextColor(20,20,20); }
-      var ln = doc.splitTextToSize(f[1], 116); doc.text(ln, 78, y);
-      y += ln.length * 5.5 + 1; doc.setTextColor(20,20,20);
+  if(!isLB){
+    var C=[{l:'#',x:ml+1},{l:'Codigo',x:ml+9},{l:'V. Copia',x:ml+42},{l:'V. Listado',x:ml+60},{l:'Estado',x:ml+80},{l:'Observacion',x:ml+115}];
+    C.forEach(function(c){doc.text(c.l,c.x,y+5);});
+    y+=8;
+    recs.forEach(function(r,idx){
+      if(y>272){doc.addPage();y=15;}
+      var isOk=r.found&&r.codeOk!==false;
+      var isHall=r.found&&r.codeOk===false;
+      if(idx%2===0){doc.setFillColor(252,253,255);doc.rect(ml,y-1,cw,7,'F');}
+      doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(60,60,60);
+      doc.text(String(idx+1),ml+1,y+4);
+      doc.setFont('helvetica','bold');doc.setTextColor(26,58,92);
+      doc.text(String(r.base||'-'),ml+9,y+4);
+      doc.setFont('helvetica','normal');doc.setTextColor(60,60,60);
+      doc.text(String(r.versionLeida||'-'),ml+42,y+4);
+      doc.text(String(r.versionListado||'-'),ml+60,y+4);
+      var stIcon=isOk?'OK':isHall?'HALLAZGO':'NO ENCONTRADO';
+      var stColor=isOk?[6,95,70]:isHall?[163,45,45]:[120,60,0];
+      doc.setTextColor(stColor[0],stColor[1],stColor[2]);
+      doc.setFont('helvetica','bold');
+      doc.text(stIcon,ml+80,y+4);
+      doc.setFont('helvetica','normal');doc.setTextColor(80,80,80);
+      var obs=isOk?'Documento vigente y version correcta':isHall?(r.versionMsg||'Version incorrecta'):'Copia no escaneada';
+      var obsL=doc.splitTextToSize(obs,75);
+      doc.text(obsL,ml+115,y+4);
+      y+=Math.max(7,obsL.length*5);
+      doc.setDrawColor(230,235,240);doc.line(ml,y-1,mr,y-1);
     });
-    y += 8;
-    if(idx < recs.length-1){ doc.setDrawColor(225,225,225); doc.line(14, y-4, 196, y-4); }
-  });
+  } else {
+    var C2=[{l:'#',x:ml+1},{l:'Cod. BIT / Nombre',x:ml+9},{l:'Folio',x:ml+58},{l:'Cod.Formato',x:ml+70},{l:'V.Libro',x:ml+106},{l:'V.LM',x:ml+119},{l:'Estado',x:ml+132}];
+    C2.forEach(function(c){doc.text(c.l,c.x,y+5);});
+    y+=8;
+    recs.forEach(function(r,idx){
+      if(y>265){doc.addPage();y=15;}
+      var isOk=r.found&&r.codeOk!==false;
+      if(idx%2===0){doc.setFillColor(252,253,255);doc.rect(ml,y-1,cw,10,'F');}
+      doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(60,60,60);
+      doc.text(String(idx+1),ml+1,y+5);
+      doc.setTextColor(26,58,92);
+      var bitL=doc.splitTextToSize(String(r.base||'-'),47);
+      doc.text(bitL,ml+9,y+3);
+      if(r.nombreForm){
+        doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(100,100,100);
+        var nmL=doc.splitTextToSize(r.nombreForm,47);
+        doc.text(nmL,ml+9,y+3+bitL.length*4.5);
+      }
+      doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(60,60,60);
+      doc.text(String(r.folio||r.folioExcel||'-'),ml+58,y+5);
+      doc.setFont('helvetica','bold');doc.setTextColor(26,58,92);
+      doc.text(String(r.codFormato||'-'),ml+70,y+5);
+      doc.setFont('helvetica','normal');doc.setTextColor(60,60,60);
+      doc.text(String(r.verFormato||'-'),ml+106,y+5);
+      doc.text(String(r.verEnMaestro||'-'),ml+119,y+5);
+      var stIcon2=isOk?'OK':r.cerrado?'RETIRAR':r.obsoletoEnMaestro||r.obsoleto?'OBSOLETO':r.verOk===false?'V.INCORRECTA':'HALLAZGO';
+      var stC=isOk?[6,95,70]:[163,45,45];
+      doc.setTextColor(stC[0],stC[1],stC[2]);doc.setFont('helvetica','bold');
+      doc.text(stIcon2,ml+132,y+5);
+      y+=11;
+      doc.setDrawColor(230,235,240);doc.line(ml,y-1,mr,y-1);
+    });
+  }
 
   /* PIE */
-  var ph = doc.internal.pageSize.height;
-  doc.setFillColor(26,58,92); doc.rect(0, ph-14, 210, 14, 'F');
-  doc.setTextColor(255,255,255); doc.setFontSize(7.5); doc.setFont('helvetica','normal');
-  doc.text('Inspector: ' + insp + '  |  Área: ' + area + '  |  ' + now + '  |  Cumplimiento: ' + pct + '%', 105, ph-5.5, { align:'center' });
-
-  doc.save('Informe_Inspeccion_' + (recs[0]&&recs[0].mode==='lb'?'LB':'CC') + '_' + Date.now() + '.pdf');
-  lg('PDF generado');
+  var ph=doc.internal.pageSize.height;
+  doc.setFillColor(26,58,92);doc.rect(0,ph-12,W,12,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+  doc.text(dateStr+', '+now.toLocaleTimeString('es-CO')+'  |  Informe '+tipoLabel+' — '+areaVal,105,ph-4.5,{align:'center'});
+  var fn='informe-'+areaVal.replace(/\s+/g,'-')+'-'+dateStr+'.pdf';
+  doc.save(fn);
+  lg('PDF: '+fn);
 }
+
 
 /* ══ ARRANQUE — cargar ambos listados al abrir la app ══ */
 window.addEventListener('load', function(){
