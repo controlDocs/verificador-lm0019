@@ -925,17 +925,51 @@ function buildResultLB(res, ts){
 
 /* ══ BUSCAR ══ */
 function doBuscar(){
-  if(!mode){ show('warn-noexcel','block'); g('warn-noexcel').innerHTML='<h4>⚠️ Selecciona el tipo de inspección</h4>Elige Copias Controladas o Libros y Bitácoras en el Paso 1.'; return; }
+  if(!mode){
+    show('warn-noexcel','block');
+    g('warn-noexcel').innerHTML='<h4>⚠️ Selecciona el tipo de inspección</h4>Elige Copias Controladas o Libros y Bitácoras en el Paso 1.';
+    return;
+  }
   var code = g('mc').value.trim();
-  if(!code){ alert('Escribe o escanea un código'); return; }
+  /* Limpiar caracteres no imprimibles que algunos lectores envían */
+  code = code.replace(/[\x00-\x1F\x7F]/g,'').trim();
+  if(!code){ return; }
   lg('Buscando: "' + code + '"');
   var r = searchCode(code);
-  if(r) showResult(r);
+  if(r){ showResult(r); }
   g('mc').value = '';
+  g('mc').focus();
 }
+
+/* ══ DETECCIÓN AUTOMÁTICA DEL LECTOR DE CÓDIGO DE BARRAS ══
+   Los lectores USB/Bluetooth envían los caracteres muy rápido (< 50ms entre teclas)
+   y al final envían Enter. Detectamos esto con un timer. */
+var scannerBuffer = '';
+var scannerTimer  = null;
+var SCANNER_TIMEOUT = 80; /* ms — los lectores escriben más rápido que un humano */
+
+g('mc').addEventListener('input', function(){
+  /* Cada vez que llega input, reiniciamos el timer */
+  clearTimeout(scannerTimer);
+  scannerTimer = setTimeout(function(){
+    /* Si el campo tiene contenido y llegó rápido, procesar */
+    var val = g('mc').value.trim().replace(/[\x00-\x1F\x7F]/g,'').trim();
+    if(val && val.length >= 4){
+      lg('Lector detectado (auto): "'+val+'"');
+      g('mc').value = val; /* asegurar valor limpio */
+      doBuscar();
+    }
+  }, SCANNER_TIMEOUT);
+});
+
 g('btn-buscar').addEventListener('click', doBuscar);
+
 g('mc').addEventListener('keydown', function(e){
-  if(e.key === 'Enter'){ e.preventDefault(); doBuscar(); }
+  if(e.key === 'Enter'){
+    e.preventDefault();
+    clearTimeout(scannerTimer);
+    doBuscar();
+  }
 });
 
 /* ══ CÁMARA (celular) ══ */
