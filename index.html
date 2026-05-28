@@ -1253,7 +1253,7 @@ function doBuscar(){
     g('warn-noexcel').innerHTML='<h4>⚠️ Selecciona el tipo de inspección</h4>Elige Copias Controladas o Libros y Bitácoras en el Paso 1.';
     return;
   }
-  var code = g('mc').value.trim().replace(/[ -]/g,'').trim();
+  var code = g('mc').value.trim().replace(/[\r\n\t]/g,'').trim();
   if(!code){ return; }
   lg('Buscando: "' + code + '"');
   var r = searchCode(code);
@@ -1291,7 +1291,7 @@ g('mc').addEventListener('input', function(){
   if(!_scannerMode) return; /* escritura manual: esperar Enter */
   clearTimeout(_scanTimer);
   _scanTimer = setTimeout(function(){
-    var val = g('mc').value.trim().replace(/[ -]/g,'').trim();
+    var val = g('mc').value.trim().replace(/[\r\n\t]/g,'').trim();
     if(val && val.length >= 3){
       lg('Lector auto: "'+val+'"');
       _scannerMode = false;
