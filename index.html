@@ -321,35 +321,28 @@ input[type=file].file-inp::file-selector-button{background:#1a3a5c;color:#fff;bo
     </div>
     <button class="btn btn-green" id="btn-buscar"><em>🔍</em> Buscar código</button>
 
-    <!-- CÁMARA (celulares) -->
-    <div class="cam-wrap" id="cam-wrap">
-      <video id="cam-video" autoplay playsinline muted webkit-playsinline></video>
-      <div class="cam-overlay">
-        <div class="cam-box">
-          <div class="cc cc-tl"></div><div class="cc cc-tr"></div>
-          <div class="cc cc-bl"></div><div class="cc cc-br"></div>
-          <div class="sline"></div>
-        </div>
-        <div class="cam-hint">Centra el código de barras en el recuadro</div>
-      </div>
-    </div>
-
+    <!-- FOTO NORMAL + IA -->
+    <input type="file" id="photo-file" accept="image/*" capture="environment" style="display:none" onchange="onPhotoTaken(event)">
+    <input type="file" id="ai-photo-file" accept="image/*" capture="environment" style="display:none" onchange="onAIPhoto(event)">
     <div class="btn-row">
-      <button class="btn btn-blue" id="btn-cam"><em>📷</em> Abrir cámara</button>
-      <button class="btn btn-gray" id="btn-stop" style="display:none"><em>⏹</em> Detener</button>
+      <button class="btn" style="background:#0369a1;margin-bottom:0" onclick="document.getElementById('photo-file').click()">
+        <em>📸</em> Tomar foto
+      </button>
+      <button class="btn" style="background:#7c3aed;margin-bottom:0" onclick="document.getElementById('ai-photo-file').click()">
+        <em>🤖</em> Leer código con IA
+      </button>
     </div>
+    <!-- Spinner IA -->
+    <div class="ai-spinner" id="ai-spinner" style="display:none">
+      <div class="spinner"></div>
+      <span>Analizando imagen con IA...</span>
+    </div>
+    <!-- Resultado IA -->
+    <div class="ai-result" id="ai-result" style="display:none"></div>
+    <!-- Miniaturas de fotos pendientes -->
+    <div id="pending-photos" class="photo-strip"></div>
 
-    <div class="perm-box" id="perm-android">
-      <h4>📷 Permiso de cámara — Android Chrome</h4>
-      1. Toca el ícono 🔒 en la barra de dirección<br>
-      2. Toca <strong>Permisos → Cámara → Permitir</strong><br>
-      3. Recarga la página e intenta de nuevo
-    </div>
-    <div class="perm-box" id="perm-ios">
-      <h4>📷 Permiso de cámara — iPhone / iPad</h4>
-      1. Ve a <strong>Configuración → Safari → Cámara → Permitir</strong><br>
-      2. Vuelve a Safari y recarga la página
-    </div>
+
 
     <div class="log" id="log">Listo. Selecciona el tipo de inspección para comenzar.</div>
   </div>
