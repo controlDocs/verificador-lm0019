@@ -412,7 +412,7 @@ var excelCC = [];         // datos copias controladas
 var excelLB = [];         // datos libros y bitácoras
 var curRes = null;
 var saved = [], scanHist = [];
-var camStream = null, scanTimer = null, scanActive = false;
+var camStream = null, scanTimer = null, scanActive = false; /* kept for compatibility */
 var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 var isAndroid = /Android/i.test(navigator.userAgent);
 
@@ -1442,89 +1442,12 @@ g('btn-buscar').addEventListener('click', function(){
 });
 
 /* ══ CÁMARA (celular) ══ */
-g('btn-cam').addEventListener('click', function(){
-  hide('perm-android'); hide('perm-ios');
-  if(!mode){ show('warn-noexcel','block'); g('warn-noexcel').innerHTML='<h4>⚠️ Selecciona primero el tipo de inspección</h4>'; return; }
-  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-    alert('Tu navegador no soporta cámara.\niPhone/iPad: usa Safari.\nAndroid: usa Chrome.');
-    return;
-  }
-  g('btn-cam').disabled = true;
-  lg('Solicitando cámara...');
-  navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ideal:'environment'}, width:{ideal:1280}, height:{ideal:720} }, audio:false })
-    .then(function(stream){
-      lg('Cámara OK');
-      camStream = stream;
-      var vid = g('cam-video'); vid.srcObject = stream; vid.play().catch(function(){});
-      show('cam-wrap'); hide('btn-cam'); show('btn-stop'); g('btn-stop').style.display = 'flex';
-      scanActive = true;
-      if(typeof BarcodeDetector !== 'undefined'){
-        lg('Usando BarcodeDetector nativo');
-        var det = new BarcodeDetector({ formats:['code_128','ean_13','ean_8','code_39','qr_code','upc_a','upc_e','itf','codabar','data_matrix'] });
-        scanTimer = setInterval(function(){
-          if(!scanActive || !camStream || vid.readyState < 2) return;
-          det.detect(vid).then(function(codes){
-            if(codes && codes.length){ onDetected(codes[0].rawValue); }
-          }).catch(function(){});
-        }, 400);
-      } else {
-        lg('BarcodeDetector no disponible — cargando Quagga...');
-        loadQuagga();
-      }
-    })
-    .catch(function(err){
-      lg('ERROR cámara: ' + err.name); g('btn-cam').disabled = false;
-      if(err.name === 'NotAllowedError'){ if(isAndroid){ show('perm-android'); }else{ show('perm-ios'); } }
-      else { alert('Error al abrir cámara: ' + err.name + '\n' + err.message); }
-    });
-});
+/* camera scanner removed */
+;
 
-function loadQuagga(){
-  var s = document.createElement('script');
-  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js';
-  s.onload = function(){
-    Quagga.init({
-      inputStream:{ name:'Live', type:'LiveStream', target:g('cam-wrap'),
-        constraints:{ facingMode:'environment', width:{ideal:1280}, height:{ideal:720} } },
-      locator:{ patchSize:'medium', halfSample:true },
-      numOfWorkers:0,
-      decoder:{ readers:['code_128_reader','ean_reader','code_39_reader','codabar_reader','upc_reader','i2of5_reader'] },
-      locate:true
-    }, function(err){
-      if(err){ lg('Quagga init error: ' + err); return; }
-      Quagga.start(); lg('Quagga activo');
-    });
-    Quagga.onDetected(function(data){
-      if(!scanActive) return;
-      var code = data.codeResult.code;
-      var errs = data.codeResult.decodedCodes.filter(function(x){ return x.error !== undefined; }).map(function(x){ return x.error; });
-      var avg = errs.length ? errs.reduce(function(a,b){ return a+b; }, 0) / errs.length : 0;
-      if(avg > 0.2) return;
-      onDetected(code);
-    });
-  };
-  document.head.appendChild(s);
-}
 
-function onDetected(code){
-  if(!scanActive) return;
-  scanActive = false;
-  lg('DETECTADO: "' + code + '"');
-  stopCam();
-  var r = searchCode(code);
-  if(r) showResult(r); /* showResult ya guarda automáticamente */
-}
 
-g('btn-stop').addEventListener('click', stopCam);
-function stopCam(){
-  scanActive = false;
-  if(scanTimer){ clearInterval(scanTimer); scanTimer = null; }
-  if(typeof Quagga !== 'undefined'){ try{ Quagga.stop(); }catch(e){} }
-  if(camStream){ camStream.getTracks().forEach(function(t){ t.stop(); }); camStream = null; }
-  g('cam-video').srcObject = null;
-  hide('cam-wrap'); show('btn-cam'); hide('btn-stop');
-  g('btn-cam').disabled = false; lg('Cámara detenida');
-}
+/* btn-stop removed */
 
 /* ══ GUARDAR / STATS ══ */
 g('btn-save').addEventListener('click', function(){
@@ -1813,54 +1736,6 @@ function genPDF(){
         y += maxH + 6;
       }
     });
-    if(isLB){
-      pageRecs.forEach(function(r,idx){
-        if(!r.checklist || !r.checklist.length) return;
-        if(y>240){ doc.addPage(); y=20; }
-
-        /* Mini-header del checklist */
-        doc.setFillColor(26,58,92); doc.roundedRect(ml,y,cw,7,2,2,'F');
-        doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont('helvetica','bold');
-        doc.text('CHECKLIST: '+(r.nombreRegistrado||r.base)+' — Folio: '+(r.folio||r.folioExcel||'—'), ml+3, y+5);
-        y+=9;
-
-        /* Encabezado columnas */
-        doc.setFillColor(240,243,248); doc.rect(ml,y,cw,6,'F');
-        doc.setTextColor(80,100,130); doc.setFontSize(7); doc.setFont('helvetica','bold');
-        doc.text('#', ml+2,y+4);
-        doc.text('Pregunta', ml+8,y+4);
-        doc.text('Resp.', ml+140,y+4);
-        doc.text('Observaciones', ml+155,y+4);
-        y+=7;
-
-        CHECKLIST_QS.forEach(function(q,qi){
-          if(y>275){doc.addPage();y=20;}
-          var chk = r.checklist[qi]||{r:'',obs:''};
-          var resp = chk.r||'—';
-          var obs  = chk.obs||'';
-          var bgC = resp==='SI'?[236,253,245]:resp==='NO'?[254,242,242]:[255,255,255];
-          doc.setFillColor(bgC[0],bgC[1],bgC[2]);
-          var obsLines = doc.splitTextToSize(obs,38);
-          var rowH = Math.max(7, obsLines.length*4.5+2);
-          doc.rect(ml,y,cw,rowH,'F');
-          doc.setTextColor(60,60,60); doc.setFont('helvetica','normal'); doc.setFontSize(7.5);
-          doc.text(String(qi+1), ml+2, y+4.5);
-          var qLines = doc.splitTextToSize(q,129);
-          doc.text(qLines, ml+8, y+4.5);
-          /* Respuesta con color */
-          if(resp==='SI') doc.setTextColor(6,95,70);
-          else if(resp==='NO') doc.setTextColor(163,45,45);
-          else doc.setTextColor(120,60,0);
-          doc.setFont('helvetica','bold');
-          doc.text(resp, ml+140, y+4.5);
-          doc.setTextColor(60,60,60); doc.setFont('helvetica','normal');
-          if(obs) doc.text(obsLines, ml+155, y+4.5);
-          y+=rowH;
-          doc.setDrawColor(220,225,230); doc.line(ml,y,mr,y);
-        });
-        y+=5;
-      });
-    }
 
     /* PIE */
     var ph=doc.internal.pageSize.height;
