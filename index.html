@@ -257,7 +257,7 @@ input[type=file].file-inp::file-selector-button{background:#1a3a5c;color:#fff;bo
         </select>
       </div>
     </div>
-    <div class="form-row" id="area-row">
+    <div class="form-row" id="area-row" style="display:none">
       <div class="fg">
         <label>Área / Subárea</label>
         <select class="inp" id="area-sel" onchange="onAreaChange()">
@@ -507,34 +507,48 @@ function onPlantaChange(){
   var manualWrap = g('planta-manual-wrap');
   var areaRow    = g('area-row');
   var areaSel    = g('area-sel');
+  var areaManWrap = g('area-manual-wrap');
+
+  if(!sel){
+    /* Nada seleccionado */
+    manualWrap.style.display  = 'none';
+    areaRow.style.display     = 'none';
+    if(areaManWrap) areaManWrap.style.display = 'none';
+    return;
+  }
+
   if(sel === '__manual__'){
-    manualWrap.style.display = 'block';
-    areaRow.style.display    = 'none';
+    manualWrap.style.display  = 'block';
+    areaRow.style.display     = 'none';
+    if(areaManWrap) areaManWrap.style.display = 'none';
   } else {
-    manualWrap.style.display = 'none';
-    areaRow.style.display    = '';
-    /* Populate area dropdown */
-    areaSel.innerHTML = '<option value="">— Seleccionar área —</option>';
-    if(sel && PLANT_AREAS[sel]){
-      PLANT_AREAS[sel].forEach(function(a){
-        areaSel.innerHTML += '<option>'+a+'</option>';
-      });
-    }
-    areaSel.innerHTML += '<option value="__manual_area__">✏️ Escribir manualmente...</option>';
+    manualWrap.style.display  = 'none';
+    areaRow.style.display     = 'flex';
+    if(areaManWrap) areaManWrap.style.display = 'none';
+
+    /* Poblar dropdown de áreas */
+    var areas = PLANT_AREAS[sel] || [];
+    areaSel.innerHTML = '<option value="">— Seleccionar área / subárea —</option>';
+    areas.forEach(function(a){
+      var opt = document.createElement('option');
+      opt.textContent = a; opt.value = a;
+      areaSel.appendChild(opt);
+    });
+    var optM = document.createElement('option');
+    optM.value = '__manual_area__'; optM.textContent = '✏️ Escribir manualmente...';
+    areaSel.appendChild(optM);
+    lg('Planta: '+sel+' — '+areas.length+' áreas cargadas');
   }
 }
 
 function onAreaChange(){
-  var v = g('area-sel').value;
+  var v    = g('area-sel').value;
   var wrap = g('area-manual-wrap');
+  if(!wrap) return;
   if(v === '__manual_area__'){
     wrap.style.display = 'block';
-    if(!g('area-inp')) {
-      var inp = document.createElement('input');
-      inp.type='text'; inp.className='inp'; inp.id='area-inp';
-      inp.placeholder='Escribe el área...'; inp.autocomplete='off';
-      wrap.appendChild(inp);
-    }
+    var inp = g('area-inp');
+    if(inp) inp.focus();
   } else {
     wrap.style.display = 'none';
   }
@@ -548,10 +562,14 @@ function getPlanta(){
 
 function getArea(){
   var ps = g('planta-sel') ? g('planta-sel').value : '';
-  if(ps === '__manual__') return (g('area-inp-manual') ? g('area-inp-manual').value.trim() : '');
+  if(ps === '__manual__'){
+    return g('area-inp-manual') ? g('area-inp-manual').value.trim() : '';
+  }
   var as = g('area-sel') ? g('area-sel').value : '';
-  if(as === '__manual_area__') return (g('area-inp') ? g('area-inp').value.trim() : '');
-  return as || (g('area-inp') ? g('area-inp').value.trim() : '') || '';
+  if(!as || as === '__manual_area__'){
+    return g('area-inp') ? g('area-inp').value.trim() : '';
+  }
+  return as;
 }
 
 /* ══ MODO DE INSPECCIÓN ══ */
@@ -562,21 +580,30 @@ function setMode(m){
   hide('hint-cc'); hide('hint-lb'); hide('warn-noexcel');
   show('hint-' + m, 'block');
   lg('Modo: ' + (m === 'cc' ? 'Copias Controladas' : 'Libros y Bitácoras'));
+  updateXstatForMode();
+}
 
-  /* Mostrar estado: ambos listados se cargan al iniciar la app */
-  if(m === 'cc'){
+function updateXstatForMode(){
+  if(!mode) return;
+  if(mode === 'cc'){
     if(excelCC.length){
-      setXstat('ok', 'Listado Maestro listo · '+excelCC.length+' documentos',
-        excelLB.length ? 'Libros y Bitácoras también disponible ('+excelLB.length+' registros)' : 'Cargando Libros y Bitácoras...');
+      setXstat('ok',
+        'Listado Maestro listo — ' + excelCC.length + ' documentos',
+        excelLB.length
+          ? 'Libros y Bitácoras también cargado (' + excelLB.length + ' registros) ✓'
+          : 'Cargando Listado de Libros y Bitácoras en segundo plano...');
     } else {
-      setXstat('loading', 'Cargando Listado Maestro...', 'Espera un momento...');
+      setXstat('loading', 'Cargando Listado Maestro...', 'Descargando desde GitHub, espera un momento...');
     }
   } else {
     if(excelLB.length){
-      setXstat('ok', 'Listado Libros y Bitácoras · '+excelLB.length+' registros',
-        excelCC.length ? 'Listado Maestro también disponible ('+excelCC.length+' docs)' : 'Cargando Listado Maestro...');
+      setXstat('ok',
+        'Listado Libros y Bitácoras — ' + excelLB.length + ' registros',
+        excelCC.length
+          ? 'Listado Maestro también cargado (' + excelCC.length + ' docs) ✓'
+          : 'Cargando Listado Maestro en segundo plano...');
     } else {
-      setXstat('loading', 'Cargando Listado Libros y Bitácoras...', 'Espera un momento...');
+      setXstat('loading', 'Cargando Listado de Libros y Bitácoras...', 'Descargando desde GitHub, espera un momento...');
     }
   }
 }
@@ -589,8 +616,9 @@ function loadExcelSilent(url, target){
     .then(function(buf){ processBuffer(buf, target); })
     .catch(function(err){
       lg('ERROR descarga '+target+': '+err.message);
-      if(target==='cc' && mode==='cc') setXstat('err','Error cargando Listado Maestro',err.message);
-      if(target==='lb' && mode==='lb') setXstat('err','Error cargando Listado LB',err.message);
+      if(target==='cc'){ excelCC=[]; }
+      if(target==='lb'){ excelLB=[]; }
+      updateXstatForMode();
     });
 }
 
@@ -634,18 +662,8 @@ function processBuffer(buf, target){
     lg('✅ '+label+': '+data.length+' filas | A="'+sample[0]+'" D="'+sample[3]+'" F="'+sample[5]+'" G="'+sample[6]+'"');
     if(target==='cc') lg('  LM ColA(CódActual)="'+sample[0]+'" ColD(Versión)="'+sample[3]+'" ColK(Estado)="'+sample[10]+'"');
     if(target==='lb') lg('  LB ColD(CódBIT)="'+sample[3]+'" ColF(Formato)="'+sample[5]+'" ColG(Versión)="'+sample[6]+'"');
-    if(target==='cc' && mode==='cc'){
-      setXstat('ok','Listado Maestro listo · '+data.length+' documentos',
-        excelLB.length ? 'Ambos listados cargados ✓' : 'Cargando Libros y Bitácoras...');
-    } else if(target==='lb' && mode==='lb'){
-      setXstat('ok','Listado Libros y Bitácoras · '+data.length+' registros',
-        excelCC.length ? 'Ambos listados cargados ✓' : 'Cargando Listado Maestro...');
-    }
-    /* Si el otro listado ya cargó, actualizar mensaje */
-    if(target==='cc' && excelLB.length && mode==='lb')
-      setXstat('ok','Listado Libros y Bitácoras · '+excelLB.length+' registros','Ambos listados cargados ✓');
-    if(target==='lb' && excelCC.length && mode==='cc')
-      setXstat('ok','Listado Maestro listo · '+excelCC.length+' documentos','Ambos listados cargados ✓');
+    /* Actualizar status en tiempo real según modo activo */
+    updateXstatForMode();
     hide('manual-load-wrap');
   } catch(err){
     lg('ERROR procesar Excel: ' + err.message);
@@ -1688,8 +1706,7 @@ function genPDF(){
 /* ══ ARRANQUE — cargar ambos listados al abrir la app ══ */
 window.addEventListener('load', function(){
   lg('App iniciada | ' + (isAndroid ? 'Android' : isIOS ? 'iOS' : 'PC/Tablet'));
-  lg('Cargando ambos listados automáticamente...');
-  /* Cargar los dos listados en paralelo desde el inicio */
+  lg('Cargando ambos listados en paralelo...');
   waitLib(function(){ return typeof XLSX !== 'undefined'; }, function(){
     loadExcelSilent(URL_CC, 'cc');
     loadExcelSilent(URL_LB, 'lb');
