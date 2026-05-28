@@ -323,7 +323,7 @@ input[type=file].file-inp::file-selector-button{background:#1a3a5c;color:#fff;bo
 
     <!-- FOTO NORMAL + IA -->
     <input type="file" id="photo-file" accept="image/*" capture="environment" style="display:none" onchange="onPhotoTaken(event)">
-    <input type="file" id="ai-photo-file" accept="image/*" capture="environment" style="display:none" onchange="onAIPhoto(event)">
+    <input type="file" id="ai-photo-file" accept="image/*" style="display:none" onchange="onAIPhoto(event)">
     <div class="btn-row">
       <button class="btn" style="background:#0369a1;margin-bottom:0" onclick="document.getElementById('photo-file').click()">
         <em>📸</em> Tomar foto
@@ -391,6 +391,7 @@ input[type=file].file-inp::file-selector-button{background:#1a3a5c;color:#fff;bo
 </div><!-- /wrap -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 /* ══════════════════════════════════════
@@ -1055,79 +1056,153 @@ function removePendingPhoto(i){
 function onAIPhoto(evt){
   var file = evt.target.files && evt.target.files[0];
   if(!file) return;
-  if(!mode){ alert('Selecciona primero el tipo de inspección.'); return; }
+  if(!mode){ alert('Selecciona primero el tipo de inspeccion (Paso 1).'); evt.target.value=''; return; }
 
   var spinner  = document.getElementById('ai-spinner');
   var resultEl = document.getElementById('ai-result');
-  spinner.style.display  = 'flex';
+  var mcInp    = document.getElementById('mc');
+
+  spinner.style.display = 'flex';
+  spinner.querySelector('span').textContent = 'Leyendo texto de la imagen...';
   resultEl.style.display = 'none';
 
   var reader = new FileReader();
   reader.onload = function(e){
-    var b64 = e.target.result.split(',')[1];
-    var mtype = file.type || 'image/jpeg';
+    var dataUrl = e.target.result;
 
-    /* Guardar también como foto normal */
-    pendingPhotos.push(e.target.result);
+    /* Guardar foto adjunta */
+    pendingPhotos.push(dataUrl);
     renderPendingPhotos();
 
-    /* Prompt según modo */
-    var prompt = mode === 'lb'
-      ? "Esta imagen es de una bitacora o libro de manufactura farmaceutica. Extrae el codigo de la bitacora con formato LETRAS-NUMEROS-NUMEROS-LETRAS (ejemplo: BIT-0046-26-SOF). Responde UNICAMENTE con el codigo encontrado. Si no lo encuentras escribe: NO_ENCONTRADO"
-      : "Esta imagen es de un documento de manufactura farmaceutica. Extrae el codigo del documento con formato LETRAS-NUMEROS (ejemplo: INST-0002 o SOP-0301). Responde UNICAMENTE con el codigo sin version. Si no lo encuentras escribe: NO_ENCONTRADO";
-
-    fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 100,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: mtype, data: b64 } },
-            { type: 'text',  text: prompt }
-          ]
-        }]
-      })
-    })
-    .then(function(r){ return r.json(); })
-    .then(function(data){
+    /* OCR con Tesseract.js */
+    if(typeof Tesseract === 'undefined'){
       spinner.style.display = 'none';
-      var text = (data.content && data.content[0] && data.content[0].text) || '';
-      text = text.trim().toUpperCase().replace(/[\n]/g,'');
-      if(!text || text === 'NO_ENCONTRADO' || text.includes('NO_ENCONTRADO')){
-        resultEl.style.display = 'block';
-        resultEl.style.background = '#fef2f2';
-        resultEl.style.borderColor = '#dc2626';
-        resultEl.style.color = '#991b1b';
-        resultEl.innerHTML = '❌ No se encontró un código en la imagen. Escríbelo manualmente.';
-      } else {
+      showAIFallback(resultEl, dataUrl);
+      return;
+    }
+
+    Tesseract.recognize(dataUrl, 'eng', {
+      logger: function(m){
+        if(m.status === 'recognizing text' && spinner.querySelector('span')){
+          spinner.querySelector('span').textContent =
+            'Leyendo imagen... ' + Math.round((m.progress||0)*100) + '%';
+        }
+      }
+    }).then(function(result){
+      spinner.style.display = 'none';
+      var rawText = result.data.text || '';
+
+      /* Extraer código del texto OCR */
+      var code = extractCode(rawText);
+
+      if(code){
+        /* Poner el código en el campo del lector */
+        mcInp.value = code;
+        mcInp.focus();
+
+        /* Mostrar confirmación verde */
         resultEl.style.display = 'block';
         resultEl.style.background = '#ecfdf5';
         resultEl.style.borderColor = '#059669';
         resultEl.style.color = '#065f46';
-        resultEl.innerHTML = '✅ Código detectado: <strong>'+text+'</strong>';
-        /* Colocar en el campo y buscar */
-        document.getElementById('mc').value = text;
-        setTimeout(function(){
-          var r = searchCode(text);
-          if(r) showResult(r);
-          document.getElementById('mc').value = '';
-        }, 600);
+        resultEl.style.padding = '12px';
+        resultEl.style.borderRadius = '10px';
+        resultEl.innerHTML =
+          '<p style="font-weight:700;margin-bottom:6px">Codigo detectado en la imagen:</p>'
+          +'<p style="font-size:18px;font-family:monospace;font-weight:800;color:#065f46">'
+          +code+'</p>'
+          +'<p style="font-size:12px;margin-top:4px;color:#047857">'
+          +'Revisa el campo de arriba y presiona <strong>Buscar codigo</strong></p>';
+      } else {
+        /* No se encontró código — mostrar imagen para entrada manual */
+        showAIFallback(resultEl, dataUrl);
       }
-    })
-    .catch(function(err){
+    }).catch(function(err){
       spinner.style.display = 'none';
-      resultEl.style.display = 'block';
-      resultEl.style.background = '#fef2f2';
-      resultEl.style.borderColor = '#dc2626';
-      resultEl.style.color = '#991b1b';
-      resultEl.innerHTML = '❌ Error al conectar con la IA: '+err.message;
+      showAIFallback(resultEl, dataUrl);
     });
   };
+  reader.onerror = function(){ spinner.style.display='none'; alert('Error al leer la imagen.'); };
   reader.readAsDataURL(file);
   evt.target.value = '';
+}
+
+/* Extraer código del texto OCR según el modo */
+function extractCode(text){
+  /* Limpiar texto: quitar saltos y caracteres raros */
+  var t = text.replace(/\n/g,' ').replace(/\r/g,' ').toUpperCase();
+
+  /* Patrones a buscar según modo */
+  var patterns = [];
+
+  if(mode === 'lb'){
+    /* BIT-0046-26-SOF, BIT'0192'26'LCC, etc. */
+    patterns = [
+      /\bBIT[-']?\d{3,6}[-']\d{1,3}[-'][A-Z]{2,6}\b/g,
+      /\bBIT[-\s']?\d{3,6}\b/g
+    ];
+  } else {
+    /* INST-0002, SOP-0301, MAN-0033, etc. */
+    patterns = [
+      /\b[A-Z]{2,6}[-\s]?\d{3,6}\b/g
+    ];
+  }
+
+  for(var pi=0; pi<patterns.length; pi++){
+    var matches = t.match(patterns[pi]);
+    if(matches && matches.length > 0){
+      /* Limpiar el match: normalizar separadores */
+      var code = matches[0].replace(/\s+/g,'-').replace(/'+/g,'-').trim();
+      /* Quitar guiones dobles */
+      code = code.replace(/--+/g,'-');
+      return code;
+    }
+  }
+  return null;
+}
+
+function showAIFallback(resultEl, dataUrl){
+  /* Mostrar foto + campo manual si OCR no encontró código */
+  resultEl.style.display = 'block';
+  resultEl.style.background = '#fffbeb';
+  resultEl.style.borderColor = '#d97706';
+  resultEl.style.color = '#92400e';
+  resultEl.style.padding = '12px';
+  resultEl.style.borderRadius = '10px';
+  resultEl.innerHTML =
+    '<p style="font-weight:700;margin-bottom:8px">No se detecto el codigo automaticamente. Escribe el codigo de la imagen:</p>'
+    +'<img src="'+dataUrl+'" style="width:100%;border-radius:8px;margin-bottom:10px;'
+    +'max-height:220px;object-fit:contain;background:#000;display:block">'
+    +'<div style="display:flex;gap:8px">'
+    +'<input type="text" id="ai-code-inp" placeholder="Ej: INST-0002" '
+    +'style="flex:1;padding:12px;border-radius:8px;border:1.5px solid #d97706;'
+    +'font-size:16px;font-family:monospace;text-transform:uppercase;'
+    +'-webkit-appearance:none;background:#fff;color:#111" '
+    +'autocomplete="off" autocorrect="off" autocapitalize="characters">'
+    +'<button onclick="useAICode()" '
+    +'style="padding:12px 16px;background:#0f6e56;color:#fff;border:none;'
+    +'border-radius:8px;font-weight:700;cursor:pointer;font-size:15px;'
+    +'-webkit-appearance:none">OK</button>'
+    +'</div>';
+  setTimeout(function(){
+    var inp=document.getElementById('ai-code-inp');
+    if(inp){
+      inp.focus();
+      inp.addEventListener('keydown',function(ev){
+        if(ev.key==='Enter'){ev.preventDefault();useAICode();}
+      });
+    }
+  },300);
+}
+
+function useAICode(){
+  var inp = document.getElementById('ai-code-inp');
+  if(!inp) return;
+  var code = inp.value.trim().toUpperCase();
+  if(!code){ alert('Escribe el codigo que aparece en la imagen.'); return; }
+  document.getElementById('ai-result').style.display = 'none';
+  var r = searchCode(code);
+  if(r) showResult(r);
 }
 
 /* Cuando se guarda un resultado, adjuntar las fotos pendientes */
