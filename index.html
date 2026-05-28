@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<title>Verificador Documentos · Grupo Procaps</title>
+<title>Verificador Documentos · </title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;padding-bottom:60px;font-size:15px;}
@@ -160,6 +160,15 @@ input[type=file].file-inp::file-selector-button{background:#1a3a5c;color:#fff;bo
 /* PERM ALERTS */
 .perm-box{display:none;background:#fffbeb;border:1.5px solid #d97706;border-radius:10px;padding:12px 14px;font-size:13px;color:#92400e;margin-top:8px;line-height:1.6;}
 .perm-box h4{font-weight:700;margin-bottom:4px;}
+/* PHOTO */
+.photo-strip{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+.photo-thumb{position:relative;width:90px;height:90px;border-radius:8px;overflow:hidden;border:2px solid #e5e7eb;flex-shrink:0;}
+.photo-thumb img{width:100%;height:100%;object-fit:cover;}
+.photo-del{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.55);border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.ai-spinner{display:none;align-items:center;gap:10px;padding:12px;background:#eff6ff;border:1.5px solid #3b82f6;border-radius:10px;font-size:13px;color:#1e40af;margin-top:8px;}
+.ai-spinner .spinner{border-color:#bfdbfe;border-top-color:#3b82f6;}
+.ai-result{display:none;padding:11px 13px;background:#ecfdf5;border:1.5px solid #059669;border-radius:10px;font-size:13px;color:#065f46;margin-top:8px;}
+
 /* CHECKLIST */
 .chk-card{background:#fff;border-radius:14px;border:1px solid #e5e7eb;margin-bottom:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06);}
 .chk-hdr{background:#1a3a5c;padding:12px 16px;font-size:13px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px;}
@@ -189,7 +198,7 @@ input[type=file].file-inp::file-selector-button{background:#1a3a5c;color:#fff;bo
   <div class="hdr-ico">📋</div>
   <div>
     <h1>Verificador de Documentos</h1>
-    <p>Grupo Procaps · Sistema de Inspección · Celular, Tablet y PC</p>
+    <p> · Sistema de Inspección · Celular, Tablet y PC</p>
   </div>
 </div>
 
@@ -411,11 +420,7 @@ var isAndroid = /Android/i.test(navigator.userAgent);
 function g(id){ return document.getElementById(id); }
 function show(id, d){ g(id).style.display = d || 'block'; }
 function hide(id){ g(id).style.display = 'none'; }
-function lg(m){
-  var e = g('log'), t = new Date().toLocaleTimeString('es-CO');
-  e.textContent = '[' + t + '] ' + m + '\n' + e.textContent;
-  console.log(m);
-}
+function lg(m){ /* silent */ }
 function waitLib(check, cb, n){
   n = n || 0; if(n > 60) return;
   if(check()){ cb(); } else { setTimeout(function(){ waitLib(check, cb, n+1); }, 300); }
@@ -718,11 +723,11 @@ function parseCodCC(raw){
    BIT'0192'26'LCC/200   → código BIT: BIT-0192-26-LCC  folio: 200
 
    REGLA:
-   - El FOLIO es el número final: después de "/" o "-" al final si es solo dígitos
-   - El código BIT completo es todo lo anterior al folio
-   - Para buscar en Excel se usa la columna "Código de BIT" (col A) que tiene: BIT-0046-26-SOF
-   - Columna C = Código del Formato, Columna D = Versión del Formato
-   - Columna E = Numero de Folio, Columna M = ESTATUS, Columna P = (cerrado)
+El FOLIO es el número final: después de "/" o "-" al final si es solo dígitos
+El código BIT completo es todo lo anterior al folio
+Para buscar en Excel se usa la columna "Código de BIT" (col A) que tiene: BIT-0046-26-SOF
+Columna C = Código del Formato, Columna D = Versión del Formato
+Columna E = Numero de Folio, Columna M = ESTATUS, Columna P = (cerrado)
 */
 function parseCodLB(raw){
   /*
@@ -940,8 +945,8 @@ function searchCC(raw){
   var p = parseCodCC(raw);
   /*
     Variantes del código base a buscar en "Código Actual" (col A del LM):
-    - INST-0056  (con guión — forma normalizada)
-    - INST'0056  (con comilla — como puede estar en el Excel)
+INST-0056  (con guión — forma normalizada)
+INST'0056  (con comilla — como puede estar en el Excel)
   */
   var variants = [p.base, p.base.replace('-',"'")].filter(function(v,i,a){return a.indexOf(v)===i;});
   lg('CC buscando: '+variants.join(' | ')+' | ver="'+(p.version||'null')+'" en '+excelCC.length+' registros');
@@ -1019,12 +1024,138 @@ function searchCode(raw){
 }
 
 /* ══ MOSTRAR RESULTADO ══ */
+/* ══ FOTOS ══ */
+var pendingPhotos = []; /* fotos tomadas antes de guardar */
+
+/* Foto normal — se acumula en pendingPhotos */
+function onPhotoTaken(evt){
+  var file = evt.target.files && evt.target.files[0];
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    pendingPhotos.push(e.target.result); /* base64 */
+    renderPendingPhotos();
+  };
+  reader.readAsDataURL(file);
+  evt.target.value = ''; /* reset para poder tomar otra */
+}
+
+function renderPendingPhotos(){
+  var strip = document.getElementById('pending-photos');
+  if(!strip) return;
+  strip.innerHTML = '';
+  pendingPhotos.forEach(function(src, i){
+    var div = document.createElement('div');
+    div.className = 'photo-thumb';
+    div.innerHTML = '<img src="'+src+'" alt="foto '+(i+1)+'">'
+      +'<button class="photo-del" onclick="removePendingPhoto('+i+')">✕</button>';
+    strip.appendChild(div);
+  });
+}
+
+function removePendingPhoto(i){
+  pendingPhotos.splice(i,1);
+  renderPendingPhotos();
+}
+
+/* Foto con IA — enviar a Claude para leer el código */
+function onAIPhoto(evt){
+  var file = evt.target.files && evt.target.files[0];
+  if(!file) return;
+  if(!mode){ alert('Selecciona primero el tipo de inspección.'); return; }
+
+  var spinner  = document.getElementById('ai-spinner');
+  var resultEl = document.getElementById('ai-result');
+  spinner.style.display  = 'flex';
+  resultEl.style.display = 'none';
+
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var b64 = e.target.result.split(',')[1];
+    var mtype = file.type || 'image/jpeg';
+
+    /* Guardar también como foto normal */
+    pendingPhotos.push(e.target.result);
+    renderPendingPhotos();
+
+    /* Prompt según modo */
+    var prompt = mode === 'lb'
+      ? "Esta imagen es de una bitacora o libro de manufactura farmaceutica. Extrae el codigo de la bitacora con formato LETRAS-NUMEROS-NUMEROS-LETRAS (ejemplo: BIT-0046-26-SOF). Responde UNICAMENTE con el codigo encontrado. Si no lo encuentras escribe: NO_ENCONTRADO"
+      : "Esta imagen es de un documento de manufactura farmaceutica. Extrae el codigo del documento con formato LETRAS-NUMEROS (ejemplo: INST-0002 o SOP-0301). Responde UNICAMENTE con el codigo sin version. Si no lo encuentras escribe: NO_ENCONTRADO";
+
+    fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 100,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mtype, data: b64 } },
+            { type: 'text',  text: prompt }
+          ]
+        }]
+      })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      spinner.style.display = 'none';
+      var text = (data.content && data.content[0] && data.content[0].text) || '';
+      text = text.trim().toUpperCase().replace(/[\n]/g,'');
+      if(!text || text === 'NO_ENCONTRADO' || text.includes('NO_ENCONTRADO')){
+        resultEl.style.display = 'block';
+        resultEl.style.background = '#fef2f2';
+        resultEl.style.borderColor = '#dc2626';
+        resultEl.style.color = '#991b1b';
+        resultEl.innerHTML = '❌ No se encontró un código en la imagen. Escríbelo manualmente.';
+      } else {
+        resultEl.style.display = 'block';
+        resultEl.style.background = '#ecfdf5';
+        resultEl.style.borderColor = '#059669';
+        resultEl.style.color = '#065f46';
+        resultEl.innerHTML = '✅ Código detectado: <strong>'+text+'</strong>';
+        /* Colocar en el campo y buscar */
+        document.getElementById('mc').value = text;
+        setTimeout(function(){
+          var r = searchCode(text);
+          if(r) showResult(r);
+          document.getElementById('mc').value = '';
+        }, 600);
+      }
+    })
+    .catch(function(err){
+      spinner.style.display = 'none';
+      resultEl.style.display = 'block';
+      resultEl.style.background = '#fef2f2';
+      resultEl.style.borderColor = '#dc2626';
+      resultEl.style.color = '#991b1b';
+      resultEl.innerHTML = '❌ Error al conectar con la IA: '+err.message;
+    });
+  };
+  reader.readAsDataURL(file);
+  evt.target.value = '';
+}
+
+/* Cuando se guarda un resultado, adjuntar las fotos pendientes */
+function attachPendingPhotos(savedIdx){
+  if(!pendingPhotos.length) return;
+  if(saved[savedIdx]){
+    saved[savedIdx].photos = pendingPhotos.slice();
+  }
+  pendingPhotos = [];
+  renderPendingPhotos();
+  /* Limpiar resultado IA */
+  var r = document.getElementById('ai-result');
+  if(r) r.style.display = 'none';
+}
+
 /* ══ CHECKLIST — preguntas de verificación LB ══ */
 var CHECKLIST_QS = [
   'Se encuentra el documento disponible en el área correspondiente.',
   'El documento se encuentra en buen estado.',
   'La bitácora contiene el anexo correspondiente.',
-  'El documento no muestra fallas en integridad de datos (enmendaduras, espacios en blanco, uso de corrector, información ilegible, no faltan firmas).',
+  'El documento no muestra fallas en integridad de datos (enmendaduras, espacios en blanco, uso de corrector, información ilegible, faltan firmas).',
   'No se encuentran documentos sueltos dentro de la bitácora.',
   'La bitácora está identificada con su etiqueta y está firmada.',
   'El número de folio registrado en la etiqueta coincide con la cantidad de folios que tiene la bitácora.'
@@ -1113,13 +1244,18 @@ function showResult(res){
 
   /* AUTO-GUARDAR siempre */
   var copy = JSON.parse(JSON.stringify(curRes));
-  copy._codeOkBase = copy.codeOk; /* preservar estado original antes del checklist */
+  copy._codeOkBase = copy.codeOk;
+  copy.photos = pendingPhotos.slice(); /* adjuntar fotos pendientes */
   if(res.mode === 'lb'){
     copy.checklist = new Array(CHECKLIST_QS.length).fill(null).map(function(){return{r:'',obs:''};});
     copy.chkHallazgo = false;
   }
   var savedIdx = saved.length;
   saved.push(copy);
+  pendingPhotos = []; /* limpiar fotos pendientes */
+  renderPendingPhotos();
+  var aiR = document.getElementById('ai-result');
+  if(aiR) aiR.style.display = 'none';
   renderSaved(); updateStats();
 
   /* Para LB: mostrar resultado + checklist en secuencia */
@@ -1466,7 +1602,7 @@ g('btn-mail').addEventListener('click', function(){
   var total = recs.length, ok = recs.filter(function(r){ return r.found && r.codeOk !== false; }).length;
   var tipoLabel = mode === 'lb' ? 'Libros y Bitácoras' : 'Copias Controladas';
   var subj = 'Informe Inspección ' + tipoLabel + ' | ' + area + ' | ' + now;
-  var body = 'INFORME DE INSPECCIÓN - GRUPO PROCAPS\n==============================\n\n'
+  var body = 'INFORME DE INSPECCIÓN - \n==============================\n\n'
     + 'Tipo: ' + tipoLabel + '\nInspector: ' + insp + '\nÁrea: ' + area + '\nFecha: ' + now + '\n\n'
     + 'Total: ' + total + ' | Cumplen: ' + ok + ' | Hallazgos: ' + (total-ok) + ' | Cumplimiento: ' + (total?Math.round(ok/total*100):0) + '%\n\nDETALLE:\n';
   recs.forEach(function(r, i){
@@ -1504,7 +1640,7 @@ function genPDF(){
     doc.setFillColor(245,247,250);doc.rect(0,27,W,18,'F');
     doc.setDrawColor(220,224,230);doc.line(0,45,W,45);
     doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(255,255,255);
-    doc.text('Grupo Procaps',ml,8);
+    doc.text('',ml,8);
     doc.setFontSize(13);doc.setFont('helvetica','bold');
     doc.text('INFORME DE VERIFICACION — '+areaVal.toUpperCase(),ml,17);
     doc.setFontSize(8.5);doc.setFont('helvetica','normal');doc.setTextColor(80,100,120);
@@ -1612,9 +1748,71 @@ function genPDF(){
         y+=Math.max(7,Math.max(bitL.length,nomL.length,fmtL.length)*5);
       }
       doc.setDrawColor(230,235,240);doc.line(ml,y-1,mr,y-1);
-    });
 
-    /* ── CHECKLIST SECTION (solo para LB, al final de cada página o en sección aparte) ── */
+      /* ── CHECKLIST debajo de cada fila LB ── */
+      if(isLB && r.checklist && r.checklist.some(function(ch){return ch&&ch.r;})){
+        if(y>245){doc.addPage();y=15;}
+        /* Sub-encabezado checklist */
+        doc.setFillColor(235,240,250);doc.rect(ml,y,cw,5.5,'F');
+        doc.setDrawColor(180,195,220);doc.line(ml,y,mr,y);doc.line(ml,y+5.5,mr,y+5.5);
+        doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(40,60,100);
+        doc.text('CHECKLIST DE VERIFICACIÓN — '+(r.nombreRegistrado||r.base||''), ml+2, y+4);
+        y+=6.5;
+
+        /* Encabezado columnas checklist */
+        doc.setFillColor(245,247,252);doc.rect(ml,y,cw,5,'F');
+        doc.setFontSize(6.5);doc.setFont('helvetica','bold');doc.setTextColor(90,110,140);
+        doc.text('Pregunta',ml+2,y+3.5);
+        doc.text('R.',ml+145,y+3.5);
+        doc.text('Observaciones',ml+152,y+3.5);
+        y+=5.5;
+
+        CHECKLIST_QS.forEach(function(q,qi){
+          if(y>275){doc.addPage();y=15;}
+          var chk=r.checklist[qi]||{r:'',obs:''};
+          var resp=chk.r||'—';
+          var obs=chk.obs||'';
+          var bgC=resp==='SI'?[240,253,244]:resp==='NO'?[255,245,245]:[255,255,255];
+          var obsLines=doc.splitTextToSize(obs,40);
+          var qLines=doc.splitTextToSize((qi+1)+'. '+q,135);
+          var rowH=Math.max(6,Math.max(qLines.length,obsLines.length)*4.2+2);
+          doc.setFillColor(bgC[0],bgC[1],bgC[2]);
+          doc.rect(ml,y,cw,rowH,'F');
+          doc.setDrawColor(220,228,238);doc.line(ml,y+rowH,mr,y+rowH);
+          doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(50,50,50);
+          doc.text(qLines,ml+2,y+4);
+          /* Respuesta */
+          if(resp==='SI'){doc.setTextColor(22,101,52);doc.setFont('helvetica','bold');}
+          else if(resp==='NO'){doc.setTextColor(185,28,28);doc.setFont('helvetica','bold');}
+          else{doc.setTextColor(120,80,0);doc.setFont('helvetica','bold');}
+          doc.text(resp,ml+145,y+4);
+          doc.setTextColor(60,60,60);doc.setFont('helvetica','normal');
+          if(obs)doc.text(obsLines,ml+152,y+4);
+          y+=rowH;
+        });
+        y+=3;
+      }
+
+      /* ── FOTOS adjuntas al registro ── */
+      if(r.photos && r.photos.length){
+        if(y > 260){ doc.addPage(); y = 15; }
+        doc.setFontSize(7); doc.setFont('helvetica','bold'); doc.setTextColor(80,80,120);
+        doc.text('Fotos adjuntas ('+r.photos.length+'):', ml, y+4);
+        y += 6;
+        var px = ml, maxH = 0;
+        var photoW = 40, photoH = 30, photoGap = 4;
+        r.photos.forEach(function(src){
+          try{
+            if(px + photoW > mr){ px = ml; y += maxH + photoGap; maxH = 0; }
+            if(y + photoH > 278){ doc.addPage(); y = 15; px = ml; }
+            doc.addImage(src, 'JPEG', px, y, photoW, photoH, '', 'FAST');
+            px += photoW + photoGap;
+            if(photoH > maxH) maxH = photoH;
+          }catch(imgErr){}
+        });
+        y += maxH + 6;
+      }
+    });
     if(isLB){
       pageRecs.forEach(function(r,idx){
         if(!r.checklist || !r.checklist.length) return;
