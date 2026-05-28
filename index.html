@@ -1177,86 +1177,108 @@ function onAIPhoto(evt){
   evt.target.value = '';
 }
 
-/* Extraer código Y versión del texto OCR
-   CC: busca "CÓDIGO: INST-0002" y "VERSIÓN: 13" → devuelve "INST-0002-13"
-   LB: busca "CÓDIGO DE BIT: BIT-0046-26-SOF" */
+/* Extraer código Y versión del texto OCR para Copias Controladas
+   La imagen tiene el formato:
+     CÓDIGO:   INST-0002-COR
+     VERSIÓN:  02
+     PÁGINA:   1 DE 14
+
+   El resultado debe ser: INST-0002-COR-02
+   IMPORTANTE: la versión se mantiene tal como aparece (02, no 2)
+*/
 function extractCode(text){
-  var lines = text.split(/[\n\r]+/);
+  /* Normalizar todo el texto:
+     1. Quitar acentos
+     2. Convertir a mayúsculas
+     3. Separar por líneas */
+  function normalize(s){
+    return s.toUpperCase()
+      .replace(/[ÁÀÂÄÃ]/g,'A')
+      .replace(/[ÉÈÊË]/g,'E')
+      .replace(/[ÍÌÎÏ]/g,'I')
+      .replace(/[ÓÒÔÖÕ]/g,'O')
+      .replace(/[ÚÙÛÜ]/g,'U')
+      .replace(/Ñ/g,'N');
+  }
+
+  var normText = normalize(text);
+  var lines    = normText.split(/[\n\r]+/).map(function(l){ return l.trim(); });
+
+  if(mode === 'lb'){
+    /* Libros y Bitácoras */
+    for(var i=0;i<lines.length;i++){
+      var l = lines[i];
+      if(l.indexOf('BIT') > -1 || l.indexOf('LIB') > -1){
+        var mb = l.match(/\b((?:BIT|LIB)[-'\s]\d{3,6}[-'\s]\d{1,3}[-'\s][A-Z]{2,6})\b/i);
+        if(mb) return cleanCode(mb[1]);
+        var mb2 = l.match(/\b((?:BIT|LIB)[-'\s]\d{3,6})\b/i);
+        if(mb2) return cleanCode(mb2[1]);
+      }
+    }
+    var fb2 = normText.match(/\b(BIT-\d{3,6}-\d{1,3}-[A-Z]{2,6})\b/);
+    if(fb2) return cleanCode(fb2[1]);
+    return null;
+  }
+
+  /* Copias Controladas */
   var foundCode = null;
   var foundVer  = null;
 
   for(var i=0; i<lines.length; i++){
-    var line  = lines[i].trim();
-    var lineU = line.toUpperCase();
+    var line = lines[i];
 
-    if(mode === 'cc'){
-      /* Buscar línea de CÓDIGO */
-      if(!foundCode){
-        var mC = lineU.match(/C[O0][D][I1L][G6][O0]\s*[:.]\s*(.+)/);
-        if(mC){
-          var rest = mC[1].trim();
-          var mc   = rest.match(/^([A-Z]{2,6}[-\s]\d{3,6}(?:[-][A-Z]{1,10})?)/i);
-          if(mc){
-            foundCode = cleanCode(mc[1]);
-            /* Intentar también capturar versión en la misma línea */
-            if(!foundVer){
-              var sameLine = mC[1];
-              var mvSame = sameLine.match(/V(?:ERS?(?:I[O0]N)?)?\.?\s*[:.]\s*(\d{1,3})/i);
-              if(mvSame) foundVer = String(parseInt(mvSame[1])||0);
-            }
-          }
+    /* ── Buscar CÓDIGO ──
+       Patrones: "CODIGO:", "COD:", "CODIGO :"
+       Valor: LETRAS-NUMEROS con sufijo opcional */
+    if(!foundCode){
+      /* Quitar todo lo que sea etiqueta de código */
+      var mC = line.match(/^C(?:ODIGO?|OD\.?)\s*[:]\s*(.+)/);
+      if(mC){
+        var val = mC[1].trim();
+        /* Tomar el primer token con formato código */
+        var mc = val.match(/^([A-Z]{2,6}-\d{3,6}(?:-[A-Z]{1,10})?)/);
+        if(mc) foundCode = mc[1].trim();
+        /* También checar si la versión está en la misma línea */
+        if(!foundVer){
+          var mvSame = val.match(/VERS?(?:ION?)?\s*[:]\s*(\d{1,3})/);
+          if(mvSame) foundVer = mvSame[1];
         }
       }
-      /* Buscar línea de VERSIÓN — múltiples variantes OCR incluyendo acentos */
-      if(!foundVer){
-        /* Normalizar: quitar acentos para comparar */
-        var lineNorm = lineU
-          .replace(/[ÓÒÔÖ]/g,'O').replace(/[ÉÈÊË]/g,'E')
-          .replace(/[ÍÌÎÏ]/g,'I').replace(/[ÁÀÂÄ]/g,'A');
-        /* Coincide con: VERSION, VERS., VER:, V: */
-        var mV = lineNorm.match(/V(?:ERSION?|ERS?|ER)[.:]\s*(\d{1,3})/);
-        if(!mV) mV = lineNorm.match(/\bVER?\s*[.:]\s*(\d{1,3})\b/);
-        if(!mV) mV = lineNorm.match(/\bV[.:]\s*(\d{1,3})\b/);
-        /* COD./ VERS. short forms */
-        if(!mV) mV = lineNorm.match(/\bVERS?\.\s*(\d{1,3})\b/);
-        /* Solo número en la línea (OCR sin etiqueta) */
-        if(!mV && foundCode && lineNorm.match(/^\d{1,3}$/))
-          mV = [null, lineNorm.trim()];
-        if(mV) foundVer = String(parseInt(mV[1])||0);
-      }
-    } else {
-      /* LB */
-      if(lineU.indexOf('BIT') > -1 || lineU.indexOf('LIB') > -1){
-        var mBit = line.match(/\b(BIT[-'\s]\d{3,6}[-'\s]\d{1,3}[-'\s][A-Z]{2,6})\b/i);
-        if(mBit) return cleanCode(mBit[1]);
-        var mBit2 = line.match(/\b(BIT[-'\s]\d{3,6})\b/i);
-        if(mBit2) return cleanCode(mBit2[1]);
-      }
+    }
+
+    /* ── Buscar VERSIÓN ──
+       Patrones: "VERSION:", "VERS:", "VER:", "V:"
+       Valor: 1-3 dígitos exactos (02, 13, 5, etc.) */
+    if(!foundVer){
+      var mV = line.match(/^V(?:ERSION?|ERS?|ER|)\s*[:]\s*(\d{1,3})\s*$/);
+      if(!mV) mV = line.match(/VERS?(?:ION?)?\s*[:]\s*(\d{1,3})\b/);
+      if(!mV) mV = line.match(/\bVER\s*[:]\s*(\d{1,3})\b/);
+      if(mV) foundVer = mV[1]; /* Mantener formato original: 02, 13, etc. */
     }
   }
 
-  if(mode === 'cc'){
-    if(foundCode && foundVer) return foundCode + '-' + foundVer;
-    if(foundCode)             return foundCode;
-    /* Fallback */
-    var allU = text.toUpperCase();
-    var fb = allU.match(/\b([A-Z]{2,6}-\d{3,6}(?:-[A-Z]{1,6})?)\b/);
-    if(fb){
-      var skip=['VERSION','PAGINA','FECHA','CODIGO'];
-      if(!skip.some(function(s){return fb[1].indexOf(s)>-1;})) return cleanCode(fb[1]);
-    }
-  } else {
-    var fb2 = text.toUpperCase().match(/\b(BIT-\d{3,6}-\d{1,3}-[A-Z]{2,6})\b/);
-    if(fb2) return cleanCode(fb2[1]);
+  /* Combinar código + versión */
+  if(foundCode && foundVer) return foundCode + '-' + foundVer;
+  if(foundCode)             return foundCode;
+
+  /* Fallback: cualquier patrón LETRAS-NUMEROS en el texto */
+  var fb = normText.match(/\b([A-Z]{2,6}-\d{3,6}(?:-[A-Z]{1,10})?)\b/);
+  if(fb){
+    var skipWords = ['VERSION','PAGINA','FECHA','CODIGO','VIGENCIA'];
+    if(!skipWords.some(function(s){ return fb[1].indexOf(s) > -1; }))
+      return fb[1];
   }
   return null;
 }
 
 function cleanCode(raw){
-  var c = String(raw).trim().toUpperCase();
-  c = c.replace(/\s+/g,'-').replace(/[''`]/g,'-').replace(/-{2,}/g,'-').replace(/-$/,'');
-  return c;
+  return String(raw).trim().toUpperCase()
+    .replace(/\s+/g, '-')
+    .replace(/[''`]/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/-$/, '');
 }
+
 
 function showAIFallback(resultEl, dataUrl){
   /* Mostrar foto + campo manual si OCR no encontró código */
