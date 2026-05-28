@@ -329,7 +329,7 @@ input[type=file].file-inp::file-selector-button{background:#1a3a5c;color:#fff;bo
         <em>📸</em> Tomar foto
       </button>
       <button class="btn" style="background:#7c3aed;margin-bottom:0" onclick="document.getElementById('ai-photo-file').click()">
-        <em>🤖</em> Leer código con IA
+        <em>🔬</em> Leer código
       </button>
     </div>
     <!-- Spinner IA -->
@@ -376,6 +376,7 @@ input[type=file].file-inp::file-selector-button{background:#1a3a5c;color:#fff;bo
     <div id="inf-list"></div>
     <div class="btn-row" style="margin-top:12px">
       <button class="btn btn-purple" id="btn-pdf"><em>📄</em> Generar PDF</button>
+        <button class="btn" style="background:#1a6e3c;margin-bottom:0" onclick="genExcel()"><em>📊</em> Exportar Excel</button>
       <button class="btn btn-pink" id="btn-mail"><em>✉️</em> Enviar correo</button>
     </div>
     <button class="btn btn-red" id="btn-clear" style="margin-top:8px"><em>🗑️</em> Limpiar todos los registros</button>
@@ -1027,7 +1028,7 @@ function onPhotoTaken(evt){
   if(!file) return;
   var reader = new FileReader();
   reader.onload = function(e){
-    pendingPhotos.push(e.target.result); /* base64 */
+    pendingPhotos.push({src:e.target.result, isAI:false});
     renderPendingPhotos();
   };
   reader.readAsDataURL(file);
@@ -1038,11 +1039,15 @@ function renderPendingPhotos(){
   var strip = document.getElementById('pending-photos');
   if(!strip) return;
   strip.innerHTML = '';
-  pendingPhotos.forEach(function(src, i){
+  pendingPhotos.forEach(function(p, i){
+    var src = typeof p === 'string' ? p : p.src;
+    var isAI = typeof p === 'object' && p.isAI;
     var div = document.createElement('div');
     div.className = 'photo-thumb';
+    div.style.opacity = isAI ? '0.5' : '1';
     div.innerHTML = '<img src="'+src+'" alt="foto '+(i+1)+'">'
-      +'<button class="photo-del" onclick="removePendingPhoto('+i+')">✕</button>';
+      +'<button class="photo-del" onclick="removePendingPhoto('+i+')">✕</button>'
+      +(isAI?'<span style="position:absolute;bottom:2px;left:2px;background:rgba(0,0,0,.6);color:#fff;font-size:9px;padding:1px 4px;border-radius:3px">OCR</span>':'');
     strip.appendChild(div);
   });
 }
@@ -1069,7 +1074,8 @@ function onAIPhoto(evt){
   var reader = new FileReader();
   reader.onload = function(e){
     var dataUrl = e.target.result;
-    pendingPhotos.push(dataUrl);
+    /* AI photo: saved only for display, not for report */
+    pendingPhotos.push({src:dataUrl, isAI:true});
     renderPendingPhotos();
 
     if(typeof Tesseract === 'undefined'){
@@ -1165,37 +1171,36 @@ function onAIPhoto(evt){
   evt.target.value = '';
 }
 
-/* Extraer código del texto OCR
-   CC: busca línea con "CÓDIGO:" y toma lo que sigue inmediatamente
-   LB: busca línea con "CÓDIGO DE BIT" o similar */
+/* Extraer código Y versión del texto OCR
+   CC: busca "CÓDIGO: INST-0002" y "VERSIÓN: 13" → devuelve "INST-0002-13"
+   LB: busca "CÓDIGO DE BIT: BIT-0046-26-SOF" */
 function extractCode(text){
   var lines = text.split(/[\n\r]+/);
+  var foundCode = null;
+  var foundVer  = null;
 
   for(var i=0; i<lines.length; i++){
-    var line = lines[i].trim();
-    var lineUp = line.toUpperCase()
-      .replace(/[0Oo]/g, function(ch,idx){
-        /* OCR confunde O/0 — en códigos los primeros 4 chars son letras */
-        return ch;
-      });
+    var line  = lines[i].trim();
+    var lineU = line.toUpperCase();
 
     if(mode === 'cc'){
-      /* Buscar línea que contenga "CODIGO" o "COD." seguido de ":" */
-      /* Luego extraer el código: LETRAS-NUMEROS al formato exacto */
-      var mLabel = lineUp.match(/C[O0][D][I1][G6][O0]\s*[:.]\s*(.+)/);
-      if(mLabel){
-        var rest = mLabel[1].trim();
-        /* El código es la primera palabra/token con formato LETRAS-NUMEROS */
-        var mCode = rest.match(/^([A-Z]{2,6}[-\s]\d{3,6}(?:[-][A-Z]{1,10})?)/i);
-        if(mCode) return cleanCode(mCode[1]);
-        /* Segundo intento: cualquier patrón LETRAS-NUMEROS en el resto */
-        var mCode2 = rest.match(/([A-Z]{2,6}-\d{3,6}(?:-[A-Z]{1,10})?)/i);
-        if(mCode2) return cleanCode(mCode2[1]);
+      /* Buscar línea de CÓDIGO */
+      if(!foundCode){
+        var mC = lineU.match(/C[O0][D][I1L][G6][O0]\s*[:.]\s*(.+)/);
+        if(mC){
+          var rest = mC[1].trim();
+          var mc   = rest.match(/^([A-Z]{2,6}[-\s]\d{3,6}(?:[-][A-Z]{1,10})?)/i);
+          if(mc) foundCode = cleanCode(mc[1]);
+        }
+      }
+      /* Buscar línea de VERSIÓN */
+      if(!foundVer){
+        var mV = lineU.match(/V[EE3]RS?[I1][O0][O0N]\s*[:.]\s*(\d{1,3})/);
+        if(mV) foundVer = mV[1].replace(/^0+/,'') || '0'; /* quitar ceros: 00→0, 08→8 */
       }
     } else {
-      /* LB: buscar "CODIGO DE BIT" o "CODIGO DE LIB" */
-      if(lineUp.indexOf('BIT') > -1 || lineUp.indexOf('LIB') > -1){
-        /* Extraer código BIT del formato: BIT-XXXX-XX-XXX */
+      /* LB */
+      if(lineU.indexOf('BIT') > -1 || lineU.indexOf('LIB') > -1){
         var mBit = line.match(/\b(BIT[-'\s]\d{3,6}[-'\s]\d{1,3}[-'\s][A-Z]{2,6})\b/i);
         if(mBit) return cleanCode(mBit[1]);
         var mBit2 = line.match(/\b(BIT[-'\s]\d{3,6})\b/i);
@@ -1204,17 +1209,18 @@ function extractCode(text){
     }
   }
 
-  /* Fallback: buscar cualquier patrón de código en todo el texto */
-  var allText = text.toUpperCase();
   if(mode === 'cc'){
-    var fb = allText.match(/\b([A-Z]{2,6}-\d{3,6}(?:-[A-Z]{1,6})?)\b/);
+    if(foundCode && foundVer) return foundCode + '-' + foundVer;
+    if(foundCode)             return foundCode;
+    /* Fallback */
+    var allU = text.toUpperCase();
+    var fb = allU.match(/\b([A-Z]{2,6}-\d{3,6}(?:-[A-Z]{1,6})?)\b/);
     if(fb){
-      var skip = ['VERSION','PAGINA','FECHA','CODIGO','PAGINAS'];
-      if(!skip.some(function(s){return fb[1].indexOf(s)>-1;}))
-        return cleanCode(fb[1]);
+      var skip=['VERSION','PAGINA','FECHA','CODIGO'];
+      if(!skip.some(function(s){return fb[1].indexOf(s)>-1;})) return cleanCode(fb[1]);
     }
   } else {
-    var fb2 = allText.match(/\b(BIT-\d{3,6}-\d{1,3}-[A-Z]{2,6})\b/);
+    var fb2 = text.toUpperCase().match(/\b(BIT-\d{3,6}-\d{1,3}-[A-Z]{2,6})\b/);
     if(fb2) return cleanCode(fb2[1]);
   }
   return null;
@@ -1274,7 +1280,10 @@ function useAICode(){
 function attachPendingPhotos(savedIdx){
   if(!pendingPhotos.length) return;
   if(saved[savedIdx]){
-    saved[savedIdx].photos = pendingPhotos.slice();
+    /* Only attach normal photos (not AI/OCR photos) to the report */
+    saved[savedIdx].photos = pendingPhotos.filter(function(p){
+      return typeof p === 'string' ? true : !p.isAI;
+    }).map(function(p){ return typeof p === 'string' ? p : p.src; });
   }
   pendingPhotos = [];
   renderPendingPhotos();
@@ -1378,7 +1387,9 @@ function showResult(res){
   /* AUTO-GUARDAR siempre */
   var copy = JSON.parse(JSON.stringify(curRes));
   copy._codeOkBase = copy.codeOk;
-  copy.photos = pendingPhotos.slice(); /* adjuntar fotos pendientes */
+  copy.photos = pendingPhotos.filter(function(p){
+    return typeof p==='string' ? true : !p.isAI;
+  }).map(function(p){ return typeof p==='string' ? p : p.src; });
   if(res.mode === 'lb'){
     copy.checklist = new Array(CHECKLIST_QS.length).fill(null).map(function(){return{r:'',obs:''};});
     copy.chkHallazgo = false;
@@ -1907,6 +1918,101 @@ function genPDF(){
   var fn='informe-'+areaVal.replace(/\s+/g,'-')+'-'+dateStr+'.pdf';
   doc.save(fn);
   lg('PDF generado: '+fn+' ('+pages.length+' paginas, '+recs.length+' registros)');
+}
+
+/* ══ GENERAR EXCEL ══ */
+function genExcel(){
+  if(typeof XLSX === 'undefined'){ alert('Librería no cargada aún. Espera un momento.'); return; }
+  var recs = saved.length ? saved : (curRes ? [curRes] : []);
+  if(!recs.length){ alert('No hay registros para exportar.'); return; }
+
+  var insp   = (document.getElementById('inspector')||{}).value||'';
+  var area   = getArea ? (getPlanta()?getPlanta()+' / ':'')+getArea() : '';
+  var isLB   = recs[0] && recs[0].mode === 'lb';
+  var now    = new Date().toLocaleString('es-CO');
+  var total  = recs.length;
+  var ok     = recs.filter(function(r){
+    return r.found && (r.mode==='lb' ? (r._codeOkBase && !r.chkHallazgo) : r.codeOk!==false);
+  }).length;
+  var pct    = total ? Math.round(ok/total*100) : 0;
+
+  var rows = [];
+
+  /* Fila de encabezado del informe */
+  rows.push(['INFORME DE INSPECCIÓN']);
+  rows.push(['Tipo:', isLB?'Libros y Bitácoras':'Copias Controladas']);
+  rows.push(['Inspector:', insp]);
+  rows.push(['Área:', area]);
+  rows.push(['Fecha:', now]);
+  rows.push(['Total leídos:', total, 'Cumplen:', ok, 'Hallazgos:', total-ok, 'Cumplimiento:', pct+'%']);
+  rows.push([]); /* fila vacía */
+
+  if(!isLB){
+    /* ── CC headers ── */
+    rows.push(['#','Código','Descripción','Versión leída','Versión listado',
+               'Estado doc.','Fecha vigencia','Fecha vencimiento','Resultado','Observación']);
+    recs.forEach(function(r, idx){
+      var rr   = r.row ? r.row._raw || [] : [];
+      var isOk = r.found && r.codeOk!==false;
+      rows.push([
+        idx+1,
+        r.base||'—',
+        r.desc || (rr[2]||'—'),
+        r.versionLeida||'—',
+        r.versionListado||'—',
+        r.estado || (rr[10]||'—'),
+        rr[7]||'—',
+        rr[8]||'—',
+        isOk ? 'CUMPLE' : !r.found ? 'NO ENCONTRADO' : 'HALLAZGO',
+        r.versionMsg||''
+      ]);
+    });
+  } else {
+    /* ── LB headers ── */
+    rows.push(['#','Código BIT','Nombre registrado','Folio','Código formato',
+               'Versión libro','Versión LM','Estatus','Resultado',
+               /* Checklist */
+               'P1','Obs P1','P2','Obs P2','P3','Obs P3','P4','Obs P4',
+               'P5','Obs P5','P6','Obs P6','P7','Obs P7']);
+    recs.forEach(function(r, idx){
+      var finalOk = r._codeOkBase && !r.chkHallazgo;
+      var row = [
+        idx+1,
+        r.base||'—',
+        r.nombreRegistrado||r.nombreForm||'—',
+        r.folio||r.folioExcel||'—',
+        r.codFormato||'—',
+        r.verFormato||'—',
+        r.verEnMaestro||'—',
+        r.estatus||'—',
+        r.found ? (finalOk?'CUMPLE':'HALLAZGO') : 'NO ENCONTRADO'
+      ];
+      /* Agregar checklist */
+      var chk = r.checklist || [];
+      for(var qi=0; qi<7; qi++){
+        var q = chk[qi]||{r:'',obs:''};
+        row.push(q.r||'—');
+        row.push(q.obs||'');
+      }
+      rows.push(row);
+    });
+  }
+
+  /* Crear workbook */
+  var wb  = XLSX.utils.book_new();
+  var ws  = XLSX.utils.aoa_to_sheet(rows);
+
+  /* Ancho de columnas */
+  ws['!cols'] = [];
+  var widths = isLB
+    ? [5,25,35,10,20,12,12,15,15, 8,25,8,25,8,25,8,25,8,25,8,25,8,25]
+    : [5,20,45,15,15,15,15,15,15,30];
+  widths.forEach(function(w){ ws['!cols'].push({wch:w}); });
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Inspección');
+
+  var fn = 'Informe_' + (isLB?'LB':'CC') + '_' + new Date().toLocaleDateString('es-CO').replace(/\//g,'-') + '.xlsx';
+  XLSX.writeFile(wb, fn);
 }
 
 /* ══ ARRANQUE — cargar ambos listados al abrir la app ══ */
