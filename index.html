@@ -322,15 +322,29 @@ input[type=file].file-inp::file-selector-button{background:#1a3a5c;color:#fff;bo
     <button class="btn btn-green" id="btn-buscar"><em>🔍</em> Buscar código</button>
 
     <!-- FOTO NORMAL + IA -->
-    <input type="file" id="photo-file" accept="image/*" capture="environment" style="display:none" onchange="onPhotoTaken(event)">
-    <input type="file" id="ai-photo-file" accept="image/*" style="display:none" onchange="onAIPhoto(event)">
+    <!-- inputs para celular (capture=environment abre cámara trasera) -->
+    <input type="file" id="photo-file-mobile" accept="image/*" capture="environment" style="display:none" onchange="onPhotoTaken(event)">
+    <input type="file" id="ai-photo-file-mobile" accept="image/*" capture="environment" style="display:none" onchange="onAIPhoto(event)">
+    <!-- inputs para PC/tablet (sin capture, abre explorador de archivos o webcam) -->
+    <input type="file" id="photo-file-desktop" accept="image/*" style="display:none" onchange="onPhotoTaken(event)">
+    <input type="file" id="ai-photo-file-desktop" accept="image/*" style="display:none" onchange="onAIPhoto(event)">
     <div class="btn-row">
-      <button class="btn" style="background:#0369a1;margin-bottom:0" onclick="document.getElementById('photo-file').click()">
+      <button class="btn" style="background:#0369a1;margin-bottom:0" onclick="triggerPhoto('normal')">
         <em>📸</em> Tomar foto
       </button>
-      <button class="btn" style="background:#7c3aed;margin-bottom:0" onclick="document.getElementById('ai-photo-file').click()">
+      <button class="btn" style="background:#7c3aed;margin-bottom:0" onclick="triggerPhoto('ai')">
         <em>🔬</em> Leer código
       </button>
+    </div>
+    <!-- Webcam modal para PC/tablet -->
+    <div id="webcam-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:16px">
+      <div style="background:#1a3a5c;color:#fff;padding:10px 20px;border-radius:10px;font-size:14px;font-weight:700" id="webcam-title">Apunta la cámara al documento</div>
+      <video id="webcam-video" autoplay playsinline muted style="max-width:90vw;max-height:60vh;border-radius:12px;background:#000;border:3px solid #00e599"></video>
+      <div style="display:flex;gap:12px">
+        <button onclick="captureWebcam()" style="padding:14px 32px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer">📸 Capturar</button>
+        <button onclick="closeWebcam()" style="padding:14px 24px;background:#6b7280;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer">✕ Cancelar</button>
+      </div>
+      <canvas id="webcam-canvas" style="display:none"></canvas>
     </div>
     <!-- Spinner IA -->
     <div class="ai-spinner" id="ai-spinner" style="display:none">
@@ -1019,21 +1033,184 @@ function searchCode(raw){
 }
 
 /* ══ MOSTRAR RESULTADO ══ */
+/* ══ CÁMARA — detectar dispositivo y abrir cámara o webcam ══ */
+var _webcamMode   = null; /* 'normal' | 'ai' */
+var _webcamStream = null;
+
+function isMobileDevice(){
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ||
+         (navigator.maxTouchPoints > 1 && /MacIntel/.test(navigator.platform));
+}
+
+function triggerPhoto(type){
+  if(!mode && type === 'ai'){
+    alert('Selecciona primero el tipo de inspección (Paso 1).');
+    return;
+  }
+  if(isMobileDevice()){
+    /* Celular: usar input con capture para abrir cámara trasera */
+    var id = type === 'ai' ? 'ai-photo-file-mobile' : 'photo-file-mobile';
+    document.getElementById(id).click();
+  } else {
+    /* PC / Tablet: intentar webcam, si falla abrir selector de archivo */
+    if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
+      openWebcam(type);
+    } else {
+      /* Fallback: selector de archivo */
+      var id2 = type === 'ai' ? 'ai-photo-file-desktop' : 'photo-file-desktop';
+      document.getElementById(id2).click();
+    }
+  }
+}
+
+function openWebcam(type){
+  _webcamMode = type;
+  var modal = document.getElementById('webcam-modal');
+  var title = document.getElementById('webcam-title');
+  title.textContent = type === 'ai'
+    ? '🔬 Apunta al código del documento (CÓDIGO: y VERSIÓN:)'
+    : '📸 Toma una foto del documento';
+  modal.style.display = 'flex';
+
+  navigator.mediaDevices.getUserMedia({
+    video:{ facingMode:'environment', width:{ideal:1920}, height:{ideal:1080} },
+    audio: false
+  })
+  .then(function(stream){
+    _webcamStream = stream;
+    var vid = document.getElementById('webcam-video');
+    vid.srcObject = stream;
+    vid.play().catch(function(){});
+  })
+  .catch(function(err){
+    closeWebcam();
+    /* Fallback a selector de archivo */
+    var id = _webcamMode === 'ai' ? 'ai-photo-file-desktop' : 'photo-file-desktop';
+    document.getElementById(id).click();
+  });
+}
+
+function captureWebcam(){
+  var vid    = document.getElementById('webcam-video');
+  var canvas = document.getElementById('webcam-canvas');
+  canvas.width  = vid.videoWidth  || 1280;
+  canvas.height = vid.videoHeight || 720;
+  var ctx = canvas.getContext('2d');
+  ctx.drawImage(vid, 0, 0);
+  var dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+  closeWebcam();
+
+  /* Process the captured frame */
+  var type = _webcamMode;
+  _webcamMode = null;
+
+  /* Convert dataUrl to a fake File-like event */
+  if(type === 'ai'){
+    processAIDataUrl(dataUrl);
+  } else {
+    processPhotoDataUrl(dataUrl);
+  }
+}
+
+function closeWebcam(){
+  if(_webcamStream){
+    _webcamStream.getTracks().forEach(function(t){ t.stop(); });
+    _webcamStream = null;
+  }
+  document.getElementById('webcam-video').srcObject = null;
+  document.getElementById('webcam-modal').style.display = 'none';
+}
+
+/* Process captured image from webcam or file input */
+function processPhotoDataUrl(dataUrl){
+  pendingPhotos.push({src: dataUrl, isAI: false});
+  renderPendingPhotos();
+  refreshResPhotos();
+}
+
+function processAIDataUrl(dataUrl){
+  if(!mode){ alert('Selecciona primero el tipo de inspección (Paso 1).'); return; }
+  var spinner  = document.getElementById('ai-spinner');
+  var resultEl = document.getElementById('ai-result');
+  var mcInp    = document.getElementById('mc');
+  spinner.style.display = 'flex';
+  if(spinner.querySelector('span')) spinner.querySelector('span').textContent = 'Procesando imagen...';
+  resultEl.style.display = 'none';
+
+  pendingPhotos.push({src: dataUrl, isAI: true});
+  renderPendingPhotos();
+
+  if(typeof Tesseract === 'undefined'){
+    spinner.style.display = 'none';
+    showAIFallback(resultEl, dataUrl);
+    return;
+  }
+
+  var imgEl = new Image();
+  imgEl.onload = function(){
+    var canvas = document.createElement('canvas');
+    var ctx    = canvas.getContext('2d');
+    var W = imgEl.naturalWidth, H = imgEl.naturalHeight;
+    var isHeader = W > H * 1.5;
+    if(mode === 'cc' && isHeader){
+      var cropX = Math.floor(W * 0.45);
+      canvas.width = W - cropX; canvas.height = H;
+      ctx.drawImage(imgEl, cropX, 0, W-cropX, H, 0, 0, W-cropX, H);
+    } else {
+      canvas.width = W; canvas.height = H;
+      ctx.drawImage(imgEl, 0, 0);
+    }
+    var id = canvas.getImageData(0,0,canvas.width,canvas.height);
+    for(var i=0;i<id.data.length;i+=4){
+      var avg=Math.round((id.data[i]+id.data[i+1]+id.data[i+2])/3);
+      id.data[i]=id.data[i+1]=id.data[i+2]=avg>128?255:0;
+    }
+    ctx.putImageData(id,0,0);
+    var croppedUrl = canvas.toDataURL('image/png');
+
+    Tesseract.recognize(croppedUrl,'spa+eng',{
+      logger:function(m){
+        if(m.status==='recognizing text'&&spinner.querySelector('span'))
+          spinner.querySelector('span').textContent='Leyendo... '+Math.round((m.progress||0)*100)+'%';
+      },
+      tessedit_pageseg_mode:'6',
+      tessedit_char_whitelist:'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-/:. ÓóÉéÁáÍíÚú'
+    }).then(function(result){
+      spinner.style.display='none';
+      var code = extractCode(result.data.text||'');
+      if(code){
+        mcInp.value=code;
+        mcInp.style.borderColor='#059669'; mcInp.style.background='#ecfdf5';
+        mcInp.style.fontWeight='800'; mcInp.style.fontSize='18px';
+        mcInp.style.letterSpacing='1.5px'; mcInp.style.color='#065f46';
+        setTimeout(function(){ mcInp.style.cssText=''; },5000);
+        resultEl.style.display='block';
+        resultEl.style.background='#ecfdf5'; resultEl.style.borderColor='#059669';
+        resultEl.style.color='#065f46'; resultEl.style.padding='10px 14px';
+        resultEl.style.borderRadius='10px';
+        resultEl.innerHTML='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">'
+          +'<div style="flex:1"><p style="font-size:11px;color:#047857;margin-bottom:2px">✅ Código detectado:</p>'
+          +'<p style="font-size:20px;font-family:monospace;font-weight:800;letter-spacing:2px;color:#065f46">'+code+'</p></div>'
+          +'<button onclick="doBuscar()" style="padding:11px 20px;background:#065f46;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;-webkit-appearance:none">Buscar ▶</button>'
+          +'</div>';
+        setTimeout(function(){ var r=searchCode(code); if(r){showResult(r);resultEl.style.display='none';} },800);
+      } else { showAIFallback(resultEl, dataUrl); }
+    }).catch(function(){ spinner.style.display='none'; showAIFallback(resultEl,dataUrl); });
+  };
+  imgEl.src = dataUrl;
+}
+
 /* ══ FOTOS ══ */
 var pendingPhotos = []; /* fotos tomadas antes de guardar */
 
-/* Foto normal — se acumula en pendingPhotos */
+/* Foto normal desde input file (mobile) */
 function onPhotoTaken(evt){
   var file = evt.target.files && evt.target.files[0];
   if(!file) return;
   var reader = new FileReader();
-  reader.onload = function(e){
-    pendingPhotos.push({src:e.target.result, isAI:false});
-    renderPendingPhotos();
-    refreshResPhotos();
-  };
+  reader.onload = function(e){ processPhotoDataUrl(e.target.result); };
   reader.readAsDataURL(file);
-  evt.target.value = ''; /* reset para poder tomar otra */
+  evt.target.value = '';
 }
 
 function refreshResPhotos(){
@@ -1111,131 +1288,13 @@ function removePendingPhoto(i){
 
 /* Foto con IA — enviar a Claude para leer el código */
 function onAIPhoto(evt){
+  /* Mobile file input handler — delegates to processAIDataUrl */
   var file = evt.target.files && evt.target.files[0];
   if(!file) return;
-  if(!mode){ alert('Selecciona primero el tipo de inspeccion (Paso 1).'); evt.target.value=''; return; }
-
-  var spinner  = document.getElementById('ai-spinner');
-  var resultEl = document.getElementById('ai-result');
-  var mcInp    = document.getElementById('mc');
-
-  spinner.style.display = 'flex';
-  if(spinner.querySelector('span')) spinner.querySelector('span').textContent = 'Procesando imagen...';
-  resultEl.style.display = 'none';
-
+  if(!mode){ alert('Selecciona primero el tipo de inspección (Paso 1).'); evt.target.value=''; return; }
   var reader = new FileReader();
-  reader.onload = function(e){
-    var dataUrl = e.target.result;
-    /* AI photo: saved only for display, not for report */
-    pendingPhotos.push({src:dataUrl, isAI:true});
-    renderPendingPhotos();
-
-    if(typeof Tesseract === 'undefined'){
-      spinner.style.display = 'none';
-      showAIFallback(resultEl, dataUrl);
-      return;
-    }
-
-    /* Para CC: recortar solo la zona derecha de la imagen donde está CÓDIGO: */
-    var img = new Image();
-    img.onload = function(){
-      var canvas   = document.createElement('canvas');
-      var ctx      = canvas.getContext('2d');
-      var W        = img.naturalWidth;
-      var H        = img.naturalHeight;
-
-      /* Detectar si la imagen es apaisada (más ancha que alta) = encabezado de documento */
-      var isHeader = W > H * 1.5;
-
-      if(mode === 'cc' && isHeader){
-        /* Recortar el lado DERECHO (donde está el bloque CÓDIGO/VERSIÓN/PÁGINA) */
-        var cropX = Math.floor(W * 0.45);   /* desde el 45% horizontal */
-        var cropW = W - cropX;
-        var cropH = H;
-        canvas.width  = cropW;
-        canvas.height = cropH;
-        ctx.drawImage(img, cropX, 0, cropW, cropH, 0, 0, cropW, cropH);
-      } else {
-        /* Imagen completa (bitácoras u otras orientaciones) */
-        canvas.width  = W;
-        canvas.height = H;
-        ctx.drawImage(img, 0, 0);
-      }
-
-      /* Aumentar contraste para mejorar OCR */
-      var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      var data = imageData.data;
-      for(var i=0; i<data.length; i+=4){
-        var avg = (data[i]+data[i+1]+data[i+2])/3;
-        var bw  = avg > 128 ? 255 : 0; /* binarizar */
-        data[i]=data[i+1]=data[i+2]=bw;
-      }
-      ctx.putImageData(imageData, 0, 0);
-
-      var croppedUrl = canvas.toDataURL('image/png');
-
-      /* OCR con configuración optimizada */
-      Tesseract.recognize(croppedUrl, 'spa+eng', {
-        logger: function(m){
-          if(m.status==='recognizing text' && spinner.querySelector('span')){
-            spinner.querySelector('span').textContent =
-              'Leyendo... ' + Math.round((m.progress||0)*100) + '%';
-          }
-        },
-        tessedit_pageseg_mode: '6',
-        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-/:. ÓóÉéÁáÍíÚú'
-      }).then(function(result){
-        spinner.style.display = 'none';
-        var rawText = result.data.text || '';
-        var code    = extractCode(rawText);
-
-        if(code){
-          mcInp.value = code;
-          /* Highlight the search field with the detected code */
-          mcInp.style.borderColor   = '#059669';
-          mcInp.style.background    = '#ecfdf5';
-          mcInp.style.fontWeight    = '800';
-          mcInp.style.fontSize      = '18px';
-          mcInp.style.letterSpacing = '1.5px';
-          mcInp.style.color         = '#065f46';
-          mcInp.focus();
-          /* Reset style after 5 seconds */
-          setTimeout(function(){
-            mcInp.style.cssText = '';
-          }, 5000);
-          /* Show confirmation below field */
-          resultEl.style.display      = 'block';
-          resultEl.style.background   = '#ecfdf5';
-          resultEl.style.borderColor  = '#059669';
-          resultEl.style.color        = '#065f46';
-          resultEl.style.padding      = '10px 14px';
-          resultEl.style.borderRadius = '10px';
-          resultEl.innerHTML =
-            '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">'
-            +'<div style="flex:1">'
-            +'<p style="font-size:11px;color:#047857;margin-bottom:2px">✅ Código detectado en la imagen:</p>'
-            +'<p style="font-size:20px;font-family:monospace;font-weight:800;letter-spacing:2px;color:#065f46">'+code+'</p>'
-            +'</div>'
-            +'<button onclick="doBuscar()" style="padding:11px 20px;background:#065f46;'
-            +'color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;'
-            +'cursor:pointer;-webkit-appearance:none;flex-shrink:0">Buscar ▶</button>'
-            +'</div>';
-          /* Auto-buscar */
-          setTimeout(function(){
-            var r = searchCode(code);
-            if(r){ showResult(r); resultEl.style.display='none'; }
-          }, 800);
-        } else {
-          showAIFallback(resultEl, dataUrl);
-        }
-      }).catch(function(){
-        spinner.style.display = 'none';
-        showAIFallback(resultEl, dataUrl);
-      });
-    };
-    img.src = dataUrl;
-  };
-  reader.onerror = function(){ spinner.style.display='none'; alert('Error al leer la imagen.'); };
+  reader.onload = function(e){ processAIDataUrl(e.target.result); };
+  reader.onerror = function(){ alert('Error al leer la imagen. Intenta de nuevo.'); };
   reader.readAsDataURL(file);
   evt.target.value = '';
 }
@@ -2118,11 +2177,13 @@ function genExcel(){
     });
   } else {
     /* ── LB headers ── */
+    var chkCols = [];
+    CHECKLIST_QS.forEach(function(q,qi){
+      chkCols.push('P'+(qi+1)+': '+q.substring(0,40)+(q.length>40?'...':''));
+      chkCols.push('Obs. P'+(qi+1));
+    });
     rows.push(['#','Código BIT','Nombre registrado','Folio','Código formato',
-               'Versión libro','Versión LM','Estatus','Resultado',
-               /* Checklist */
-               'P1','Obs P1','P2','Obs P2','P3','Obs P3','P4','Obs P4',
-               'P5','Obs P5','P6','Obs P6','P7','Obs P7']);
+               'Versión libro','Versión LM','Estatus','Resultado'].concat(chkCols));
     recs.forEach(function(r, idx){
       var finalOk = r._codeOkBase && !r.chkHallazgo;
       var row = [
