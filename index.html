@@ -1063,144 +1063,166 @@ function onAIPhoto(evt){
   var mcInp    = document.getElementById('mc');
 
   spinner.style.display = 'flex';
-  if(spinner.querySelector('span')) spinner.querySelector('span').textContent = 'Leyendo texto de la imagen...';
+  if(spinner.querySelector('span')) spinner.querySelector('span').textContent = 'Procesando imagen...';
   resultEl.style.display = 'none';
 
   var reader = new FileReader();
   reader.onload = function(e){
     var dataUrl = e.target.result;
-
-    /* Guardar foto adjunta */
     pendingPhotos.push(dataUrl);
     renderPendingPhotos();
 
-    /* OCR con Tesseract.js */
     if(typeof Tesseract === 'undefined'){
       spinner.style.display = 'none';
       showAIFallback(resultEl, dataUrl);
       return;
     }
 
-    Tesseract.recognize(dataUrl, 'eng', {
-      logger: function(m){
-        if(m.status === 'recognizing text' && spinner.querySelector('span')){
-          spinner.querySelector('span').textContent =
-            'Leyendo imagen... ' + Math.round((m.progress||0)*100) + '%';
-        }
-      }
-    }).then(function(result){
-      spinner.style.display = 'none';
-      var rawText = result.data.text || '';
+    /* Para CC: recortar solo la zona derecha de la imagen donde está CÓDIGO: */
+    var img = new Image();
+    img.onload = function(){
+      var canvas   = document.createElement('canvas');
+      var ctx      = canvas.getContext('2d');
+      var W        = img.naturalWidth;
+      var H        = img.naturalHeight;
 
-      /* Extraer código del texto OCR */
-      var code = extractCode(rawText);
+      /* Detectar si la imagen es apaisada (más ancha que alta) = encabezado de documento */
+      var isHeader = W > H * 1.5;
 
-      if(code){
-        /* Poner el código en el campo del lector */
-        mcInp.value = code;
-        mcInp.focus();
-
-        /* Mostrar confirmación verde */
-        resultEl.style.display = 'block';
-        resultEl.style.background = '#ecfdf5';
-        resultEl.style.borderColor = '#059669';
-        resultEl.style.color = '#065f46';
-        resultEl.style.padding = '12px';
-        resultEl.style.borderRadius = '10px';
-        resultEl.innerHTML =
-          '<p style="font-weight:700;margin-bottom:6px">Codigo detectado en la imagen:</p>'
-          +'<p style="font-size:18px;font-family:monospace;font-weight:800;color:#065f46">'
-          +code+'</p>'
-          +'<p style="font-size:12px;margin-top:4px;color:#047857">'
-          +'Revisa el campo de arriba y presiona <strong>Buscar codigo</strong></p>';
+      if(mode === 'cc' && isHeader){
+        /* Recortar el lado DERECHO (donde está el bloque CÓDIGO/VERSIÓN/PÁGINA) */
+        var cropX = Math.floor(W * 0.45);   /* desde el 45% horizontal */
+        var cropW = W - cropX;
+        var cropH = H;
+        canvas.width  = cropW;
+        canvas.height = cropH;
+        ctx.drawImage(img, cropX, 0, cropW, cropH, 0, 0, cropW, cropH);
       } else {
-        /* No se encontró código — mostrar imagen para entrada manual */
-        showAIFallback(resultEl, dataUrl);
+        /* Imagen completa (bitácoras u otras orientaciones) */
+        canvas.width  = W;
+        canvas.height = H;
+        ctx.drawImage(img, 0, 0);
       }
-    }).catch(function(err){
-      spinner.style.display = 'none';
-      showAIFallback(resultEl, dataUrl);
-    });
+
+      /* Aumentar contraste para mejorar OCR */
+      var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      var data = imageData.data;
+      for(var i=0; i<data.length; i+=4){
+        var avg = (data[i]+data[i+1]+data[i+2])/3;
+        var bw  = avg > 128 ? 255 : 0; /* binarizar */
+        data[i]=data[i+1]=data[i+2]=bw;
+      }
+      ctx.putImageData(imageData, 0, 0);
+
+      var croppedUrl = canvas.toDataURL('image/png');
+
+      /* OCR con configuración optimizada */
+      Tesseract.recognize(croppedUrl, 'spa+eng', {
+        logger: function(m){
+          if(m.status==='recognizing text' && spinner.querySelector('span')){
+            spinner.querySelector('span').textContent =
+              'Leyendo... ' + Math.round((m.progress||0)*100) + '%';
+          }
+        },
+        tessedit_pageseg_mode: '6',
+        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-/:. ÓóÉéÁáÍíÚú'
+      }).then(function(result){
+        spinner.style.display = 'none';
+        var rawText = result.data.text || '';
+        var code    = extractCode(rawText);
+
+        if(code){
+          mcInp.value = code;
+          mcInp.focus();
+          resultEl.style.display = 'block';
+          resultEl.style.background = '#ecfdf5';
+          resultEl.style.borderColor = '#059669';
+          resultEl.style.color = '#065f46';
+          resultEl.style.padding = '12px';
+          resultEl.style.borderRadius = '10px';
+          resultEl.innerHTML =
+            '<p style="font-weight:700;margin-bottom:6px">Codigo detectado:</p>'
+            +'<p style="font-size:20px;font-family:monospace;font-weight:800;letter-spacing:1px">'
+            +code+'</p>'
+            +'<p style="font-size:12px;margin-top:4px;color:#047857">Presiona <strong>Buscar codigo</strong> para continuar</p>';
+          /* Auto-buscar */
+          setTimeout(function(){
+            var r = searchCode(code);
+            if(r){ showResult(r); resultEl.style.display='none'; }
+          }, 800);
+        } else {
+          showAIFallback(resultEl, dataUrl);
+        }
+      }).catch(function(){
+        spinner.style.display = 'none';
+        showAIFallback(resultEl, dataUrl);
+      });
+    };
+    img.src = dataUrl;
   };
   reader.onerror = function(){ spinner.style.display='none'; alert('Error al leer la imagen.'); };
   reader.readAsDataURL(file);
   evt.target.value = '';
 }
 
-/* Extraer código del texto OCR según el modo */
+/* Extraer código del texto OCR
+   CC: busca línea con "CÓDIGO:" y toma lo que sigue inmediatamente
+   LB: busca línea con "CÓDIGO DE BIT" o similar */
 function extractCode(text){
-  /*
-    Para Copias Controladas: buscar después de "CÓDIGO:" en la imagen
-      Ej: CÓDIGO:  INST-0002-COR  →  devuelve INST-0002-COR
-    Para Libros y Bitácoras: buscar después de "CÓDIGO DE BIT" o "CÓDIGO DE LIB"
-      Ej: Código de BIT/LIB:  BIT-0046-26-SOF  →  devuelve BIT-0046-26-SOF
-  */
+  var lines = text.split(/[\n\r]+/);
 
-  /* Normalizar: quitar saltos de línea, múltiples espacios */
-  var lines = text.split(/[\n\r]+/).map(function(l){ return l.trim(); });
-  var t     = lines.join(' ').toUpperCase();
-
-  /* ── ESTRATEGIA 1: buscar por etiqueta ── */
-  var labelPatterns = [];
-
-  if(mode === 'lb'){
-    labelPatterns = [
-      /* "CÓDIGO DE BIT/LIB: BIT-0046-26-SOF" */
-      /C[OÓ]DIGO\s+DE\s+(?:BIT|LIB)[^:]*[:.\s]+([A-Z]{2,6}[-\s]\d{3,6}[-\s]\d{1,3}[-\s][A-Z]{2,6})/i,
-      /C[OÓ]DIGO\s+DE\s+(?:BIT|LIB)[^:]*[:.\s]+([A-Z]{2,6}-\d{3,6})/i,
-    ];
-  } else {
-    labelPatterns = [
-      /* "CÓDIGO:  INST-0002-COR"  — captura TIPO-NUMEROS y sufijo opcional de letras */
-      /C[OÓ]DIGO\s*[:\.]\s*([A-Z]{2,6}-\d{3,6}(?:-[A-Z]{1,10})?)/i,
-      /COD(?:IGO)?[:\.]\s*([A-Z]{2,6}-\d{3,6}(?:-[A-Z]{1,10})?)/i,
-    ];
-  }
-
-  for(var li=0; li<labelPatterns.length; li++){
-    var m = t.match(labelPatterns[li]);
-    if(m && m[1]){
-      var code = cleanCode(m[1]);
-      if(code) return code;
-    }
-  }
-
-  /* ── ESTRATEGIA 2: buscar en cada línea por patrón de código ── */
   for(var i=0; i<lines.length; i++){
-    var line = lines[i].toUpperCase().trim();
+    var line = lines[i].trim();
+    var lineUp = line.toUpperCase()
+      .replace(/[0Oo]/g, function(ch,idx){
+        /* OCR confunde O/0 — en códigos los primeros 4 chars son letras */
+        return ch;
+      });
 
-    if(mode === 'lb'){
-      /* BIT-0046-26-SOF  o  BIT'0192'26'LCC */
-      var mb = line.match(/\b(BIT[-'\s]\d{3,6}[-'\s]\d{1,3}[-'\s][A-Z]{2,6})\b/i);
-      if(mb) return cleanCode(mb[1]);
+    if(mode === 'cc'){
+      /* Buscar línea que contenga "CODIGO" o "COD." seguido de ":" */
+      /* Luego extraer el código: LETRAS-NUMEROS al formato exacto */
+      var mLabel = lineUp.match(/C[O0][D][I1][G6][O0]\s*[:.]\s*(.+)/);
+      if(mLabel){
+        var rest = mLabel[1].trim();
+        /* El código es la primera palabra/token con formato LETRAS-NUMEROS */
+        var mCode = rest.match(/^([A-Z]{2,6}[-\s]\d{3,6}(?:[-][A-Z]{1,10})?)/i);
+        if(mCode) return cleanCode(mCode[1]);
+        /* Segundo intento: cualquier patrón LETRAS-NUMEROS en el resto */
+        var mCode2 = rest.match(/([A-Z]{2,6}-\d{3,6}(?:-[A-Z]{1,10})?)/i);
+        if(mCode2) return cleanCode(mCode2[1]);
+      }
     } else {
-      /* INST-0002  SOP-0301  MAN-0033  PROC-0001 etc. */
-      var mc = line.match(/\b([A-Z]{2,6}[-\s]\d{3,6}(?:[-\s][A-Z0-9]{1,10})*)\b/);
-      if(mc){
-        var candidate = cleanCode(mc[1]);
-        /* Filtrar falsos positivos comunes en documentos */
-        var skip = ['1 DE','DE 14','VERSIÓN','VERSION','PAGINA','PÁGINA',
-                    'PÁGINA','FECHA','APROBÓ','REVISÓ','ELABORÓ'];
-        var isSkip = skip.some(function(s){ return candidate.indexOf(s)>-1; });
-        if(!isSkip && candidate.length >= 5) return candidate;
+      /* LB: buscar "CODIGO DE BIT" o "CODIGO DE LIB" */
+      if(lineUp.indexOf('BIT') > -1 || lineUp.indexOf('LIB') > -1){
+        /* Extraer código BIT del formato: BIT-XXXX-XX-XXX */
+        var mBit = line.match(/\b(BIT[-'\s]\d{3,6}[-'\s]\d{1,3}[-'\s][A-Z]{2,6})\b/i);
+        if(mBit) return cleanCode(mBit[1]);
+        var mBit2 = line.match(/\b(BIT[-'\s]\d{3,6})\b/i);
+        if(mBit2) return cleanCode(mBit2[1]);
       }
     }
   }
 
+  /* Fallback: buscar cualquier patrón de código en todo el texto */
+  var allText = text.toUpperCase();
+  if(mode === 'cc'){
+    var fb = allText.match(/\b([A-Z]{2,6}-\d{3,6}(?:-[A-Z]{1,6})?)\b/);
+    if(fb){
+      var skip = ['VERSION','PAGINA','FECHA','CODIGO','PAGINAS'];
+      if(!skip.some(function(s){return fb[1].indexOf(s)>-1;}))
+        return cleanCode(fb[1]);
+    }
+  } else {
+    var fb2 = allText.match(/\b(BIT-\d{3,6}-\d{1,3}-[A-Z]{2,6})\b/);
+    if(fb2) return cleanCode(fb2[1]);
+  }
   return null;
 }
 
 function cleanCode(raw){
-  /* Normalizar separadores y limpiar espacios */
   var c = String(raw).trim().toUpperCase();
-  /* Reemplazar espacios internos por guión */
-  c = c.replace(/\s+/g, '-');
-  /* Normalizar comillas simples a guión */
-  c = c.replace(/[''`]/g, '-');
-  /* Quitar guiones dobles o triples */
-  c = c.replace(/-{2,}/g, '-');
-  /* Quitar guión final */
-  c = c.replace(/-$/, '');
+  c = c.replace(/\s+/g,'-').replace(/[''`]/g,'-').replace(/-{2,}/g,'-').replace(/-$/,'');
   return c;
 }
 
