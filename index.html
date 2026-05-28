@@ -1030,26 +1030,78 @@ function onPhotoTaken(evt){
   reader.onload = function(e){
     pendingPhotos.push({src:e.target.result, isAI:false});
     renderPendingPhotos();
+    refreshResPhotos();
   };
   reader.readAsDataURL(file);
   evt.target.value = ''; /* reset para poder tomar otra */
+}
+
+function refreshResPhotos(){
+  /* Re-render the photo strip inside the result area */
+  var strip = document.getElementById('res-photo-strip');
+  var pstrip = document.getElementById('pending-photos');
+  if(strip){
+    strip.innerHTML = '';
+    pendingPhotos.forEach(function(p, i){
+      var src  = typeof p==='string' ? p : p.src;
+      var isAI = typeof p==='object' && p.isAI;
+      var div  = document.createElement('div');
+      div.className = 'photo-thumb';
+      div.style.opacity = isAI ? '0.4' : '1';
+      div.innerHTML = '<img src="'+src+'">'
+        +'<button class="photo-del" onclick="removePendingPhoto('+i+');refreshResPhotos()">✕</button>'
+        +(isAI?'<span style="position:absolute;bottom:2px;left:2px;background:rgba(0,0,0,.6);color:#fff;font-size:9px;padding:1px 4px;border-radius:3px">OCR</span>':'');
+      strip.appendChild(div);
+    });
+  }
+  renderPendingPhotos();
+  /* Update photos in current saved record */
+  if(curRes && saved.length){
+    var idx = saved.length - 1;
+    saved[idx].photos = pendingPhotos.filter(function(p){
+      return typeof p==='string' ? true : !p.isAI;
+    }).map(function(p){ return typeof p==='string' ? p : p.src; });
+    renderSaved(); updateStats();
+  }
 }
 
 function renderPendingPhotos(){
   var strip = document.getElementById('pending-photos');
   if(!strip) return;
   strip.innerHTML = '';
+  var normalCount = 0;
   pendingPhotos.forEach(function(p, i){
     var src = typeof p === 'string' ? p : p.src;
     var isAI = typeof p === 'object' && p.isAI;
+    if(!isAI) normalCount++;
     var div = document.createElement('div');
     div.className = 'photo-thumb';
-    div.style.opacity = isAI ? '0.5' : '1';
+    div.style.opacity = isAI ? '0.4' : '1';
     div.innerHTML = '<img src="'+src+'" alt="foto '+(i+1)+'">'
       +'<button class="photo-del" onclick="removePendingPhoto('+i+')">✕</button>'
-      +(isAI?'<span style="position:absolute;bottom:2px;left:2px;background:rgba(0,0,0,.6);color:#fff;font-size:9px;padding:1px 4px;border-radius:3px">OCR</span>':'');
+      +(isAI?'<span style="position:absolute;bottom:2px;left:2px;background:rgba(0,0,0,.6);'
+        +'color:#fff;font-size:9px;padding:1px 4px;border-radius:3px">OCR</span>':'');
     strip.appendChild(div);
   });
+
+  /* Also update res-photo-strip with normal photos only */
+  var resStrip = document.getElementById('res-photo-strip');
+  if(resStrip && resStrip.children.length > 0){
+    /* Keep the "Tomar foto" button, add thumbnails after it */
+    var btn = resStrip.children[0];
+    resStrip.innerHTML = '';
+    resStrip.appendChild(btn);
+    pendingPhotos.forEach(function(p, i){
+      var src = typeof p === 'string' ? p : p.src;
+      var isAI = typeof p === 'object' && p.isAI;
+      if(isAI) return; /* skip AI photos in this strip */
+      var div = document.createElement('div');
+      div.className = 'photo-thumb';
+      div.innerHTML = '<img src="'+src+'" alt="foto '+(i+1)+'">'
+        +'<button class="photo-del" onclick="removePendingPhoto('+i+')">✕</button>';
+      resStrip.appendChild(div);
+    });
+  }
 }
 
 function removePendingPhoto(i){
@@ -1139,23 +1191,34 @@ function onAIPhoto(evt){
 
         if(code){
           mcInp.value = code;
+          /* Highlight the search field with the detected code */
+          mcInp.style.borderColor   = '#059669';
+          mcInp.style.background    = '#ecfdf5';
+          mcInp.style.fontWeight    = '800';
+          mcInp.style.fontSize      = '18px';
+          mcInp.style.letterSpacing = '1.5px';
+          mcInp.style.color         = '#065f46';
           mcInp.focus();
-          resultEl.style.display = 'block';
-          resultEl.style.background = '#ecfdf5';
-          resultEl.style.borderColor = '#059669';
-          resultEl.style.color = '#065f46';
-          resultEl.style.padding = '12px';
+          /* Reset style after 5 seconds */
+          setTimeout(function(){
+            mcInp.style.cssText = '';
+          }, 5000);
+          /* Show confirmation below field */
+          resultEl.style.display      = 'block';
+          resultEl.style.background   = '#ecfdf5';
+          resultEl.style.borderColor  = '#059669';
+          resultEl.style.color        = '#065f46';
+          resultEl.style.padding      = '10px 14px';
           resultEl.style.borderRadius = '10px';
           resultEl.innerHTML =
-            '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
-            +'<div>'
-            +'<p style="font-size:12px;margin-bottom:2px;color:#047857">Código detectado:</p>'
-            +'<p style="font-size:22px;font-family:monospace;font-weight:800;letter-spacing:1px;color:#065f46">'
-            +code+'</p>'
+            '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">'
+            +'<div style="flex:1">'
+            +'<p style="font-size:11px;color:#047857;margin-bottom:2px">✅ Código detectado en la imagen:</p>'
+            +'<p style="font-size:20px;font-family:monospace;font-weight:800;letter-spacing:2px;color:#065f46">'+code+'</p>'
             +'</div>'
-            +'<button onclick="doBuscar()" style="padding:10px 18px;background:#065f46;color:#fff;'
-            +'border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">'
-            +'Buscar ▶</button>'
+            +'<button onclick="doBuscar()" style="padding:11px 20px;background:#065f46;'
+            +'color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;'
+            +'cursor:pointer;-webkit-appearance:none;flex-shrink:0">Buscar ▶</button>'
             +'</div>';
           /* Auto-buscar */
           setTimeout(function(){
@@ -1410,12 +1473,30 @@ function updateObs(savedIdx, qi, val){
 }
 
 function saveChecklist(savedIdx){
+  /* Attach all non-AI photos (including any taken AFTER the scan) */
+  var normalPhotos = pendingPhotos.filter(function(p){
+    return typeof p==='string' ? true : !p.isAI;
+  }).map(function(p){ return typeof p==='string' ? p : p.src; });
+
+  if(saved[savedIdx]){
+    saved[savedIdx].photos = normalPhotos;
+  }
+
+  /* Clear photos for next scan */
+  pendingPhotos = [];
+  renderPendingPhotos();
+
+  var aiR = document.getElementById('ai-result');
+  if(aiR) aiR.style.display = 'none';
+
+  /* Reset mc field style */
+  var mc = g('mc');
+  if(mc){ mc.value=''; mc.style.cssText=''; }
+
   renderSaved(); updateStats();
-  lg('Checklist guardado para registro '+savedIdx);
-  /* Limpiar área de resultado y checklist */
   g('res').innerHTML='';
   hide('act');
-  g('mc').value=''; g('mc').focus();
+  g('mc').focus();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -1435,19 +1516,25 @@ function showResult(res){
   /* AUTO-GUARDAR siempre */
   var copy = JSON.parse(JSON.stringify(curRes));
   copy._codeOkBase = copy.codeOk;
-  copy.photos = pendingPhotos.filter(function(p){
+  /* For CC: attach photos now. For LB: photos attached when checklist is saved */
+  /* Photos: collect non-AI pending photos */
+  var normalPhotos = pendingPhotos.filter(function(p){
     return typeof p==='string' ? true : !p.isAI;
   }).map(function(p){ return typeof p==='string' ? p : p.src; });
+  copy.photos = normalPhotos;
   if(res.mode === 'lb'){
     copy.checklist = new Array(CHECKLIST_QS.length).fill(null).map(function(){return{r:'',obs:''};});
     copy.chkHallazgo = false;
   }
   var savedIdx = saved.length;
   saved.push(copy);
-  pendingPhotos = []; /* limpiar fotos pendientes */
-  renderPendingPhotos();
-  var aiR = document.getElementById('ai-result');
-  if(aiR) aiR.style.display = 'none';
+  /* For CC: clear pending photos. For LB: kept until checklist save */
+  if(res.mode === 'cc'){
+    pendingPhotos = [];
+    renderPendingPhotos();
+    var aiR = document.getElementById('ai-result');
+    if(aiR) aiR.style.display = 'none';
+  }
   renderSaved(); updateStats();
 
   /* Para LB: mostrar resultado + checklist en secuencia */
@@ -1496,6 +1583,11 @@ function buildResultCC(res, ts){
   }
   var vc=res.versionOk===true?'ver-ok':'ver-fail';
   var rr=res.row?res.row._raw||[]:[]; 
+  /* Photo section - shown after result for CC */
+  h+='<div class="card"><div class="card-h"><em>📸</em> Fotos del documento</div><div class="card-b">'
+   +'<p style="font-size:13px;color:#6b7280;margin-bottom:10px">Adjunta fotos de este documento. Solo las fotos de 📸 Tomar foto se guardan en el informe.</p>'
+   +'<div id="res-photo-strip" class="photo-strip"></div>'
+   +'</div></div>';
   h+='<div class="card"><div class="card-h"><em>📋</em> Detalle del documento</div><div class="card-b"><table class="dtbl">'
     +'<tr><td>Código</td><td style="font-weight:700">'+res.base+'</td></tr>'
     +'<tr><td>Descripción</td><td>'+(res.desc||rr[2]||'—')+'</td></tr>'
@@ -1650,8 +1742,17 @@ g('btn-save').addEventListener('click', function(){
   lg('Guardado (' + saved.length + ' total)');
 });
 g('btn-new').addEventListener('click', function(){
-  curRes = null; g('res').innerHTML = ''; hide('act'); g('mc').value = '';
-  window.scrollTo({ top:0, behavior:'smooth' });
+  curRes = null;
+  g('res').innerHTML = '';
+  hide('act');
+  g('mc').value = '';
+  g('mc').style.cssText = '';
+  /* Clear pending photos for new scan */
+  pendingPhotos = [];
+  renderPendingPhotos();
+  var aiR = document.getElementById('ai-result');
+  if(aiR) aiR.style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 function removeRec(i){ saved.splice(i, 1); renderSaved(); updateStats(); }
 g('btn-clear').addEventListener('click', function(){
