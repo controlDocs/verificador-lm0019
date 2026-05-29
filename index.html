@@ -1544,7 +1544,8 @@ var CHECKLIST_QS = [
   'El documento no muestra fallas en integridad de datos (enmendaduras, espacios en blanco, uso de corrector, información ilegible, faltan firmas).',
   'No se encuentran documentos sueltos dentro de la bitácora.',
   'La bitácora está identificada con su etiqueta y está firmada.',
-  'El número de folio registrado en la etiqueta coincide con la cantidad de folios que tiene la bitácora.'
+  'El número de folio registrado en la etiqueta coincide con la cantidad de folios que tiene la bitácora.',
+  'El dato registrado se encuentra fuera de especificación (Temperatura - Humedad).'
 ];
 
 function buildChecklist(idx){
@@ -1573,6 +1574,16 @@ function buildChecklist(idx){
       +'</div>'
       +'</div>';
   });
+  /* Otras observaciones - campo libre */
+  h+='<div class="chk-item">'
+    +'<div class="chk-q"><span class="chk-qnum" style="background:#6b7280">✎</span>'
+    +'Otras observaciones generales de la bitácora</div>'
+    +'<div class="chk-obs-wrap">'
+    +'<textarea class="chk-obs" placeholder="Escribe aquí cualquier observación adicional..." '
+    +'oninput="updateOtrasObs('+idx+',this.value)" rows="3" '
+    +'style="min-height:70px;border-color:#9ca3af"></textarea>'
+    +'</div>'
+    +'</div>';
   h+='<button class="btn-chk-save" onclick="saveChecklist('+idx+')">💾 Guardar checklist y continuar</button>'
     +'</div></div>';
   return h;
@@ -1603,6 +1614,10 @@ function updateObs(savedIdx, qi, val){
     if(!saved[savedIdx].checklist[qi]) saved[savedIdx].checklist[qi]={r:'',obs:''};
     saved[savedIdx].checklist[qi].obs = val;
   }
+}
+
+function updateOtrasObs(savedIdx, val){
+  if(saved[savedIdx]) saved[savedIdx].otrasObs = val;
 }
 
 function saveChecklist(savedIdx){
@@ -1658,6 +1673,7 @@ function showResult(res){
   if(res.mode === 'lb'){
     copy.checklist = new Array(CHECKLIST_QS.length).fill(null).map(function(){return{r:'',obs:''};});
     copy.chkHallazgo = false;
+    copy.otrasObs = '';
   }
   var savedIdx = saved.length;
   saved.push(copy);
@@ -2139,6 +2155,18 @@ function genPDF(){
           if(obs)doc.text(obsLines,ml+152,y+4);
           y+=rowH;
         });
+        /* Otras observaciones */
+        if(r.otrasObs){
+          if(y>272){doc.addPage();y=15;}
+          doc.setFillColor(248,250,252);doc.rect(ml,y,cw,14,'F');
+          doc.setDrawColor(200,210,220);doc.line(ml,y,mr,y);doc.line(ml,y+14,mr,y+14);
+          doc.setFontSize(7.5);doc.setFont('helvetica','bold');doc.setTextColor(60,60,80);
+          doc.text('Otras observaciones:',ml+2,y+5);
+          doc.setFont('helvetica','normal');doc.setTextColor(40,40,40);
+          var otLines=doc.splitTextToSize(r.otrasObs,cw-8);
+          doc.text(otLines,ml+2,y+10);
+          y+=14+Math.max(0,(otLines.length-1)*4.5);
+        }
         y+=3;
       }
 
@@ -2256,6 +2284,7 @@ function genExcel(){
       chkCols.push('P'+(qi+1)+': '+q.substring(0,40)+(q.length>40?'...':''));
       chkCols.push('Obs. P'+(qi+1));
     });
+    chkCols.push('Otras observaciones');
     rows.push(['#','Código BIT','Nombre registrado','Folio','Código formato',
                'Versión libro','Versión LM','Estatus','Resultado'].concat(chkCols));
     recs.forEach(function(r, idx){
@@ -2271,13 +2300,14 @@ function genExcel(){
         r.estatus||'—',
         r.found ? (finalOk?'CUMPLE':'HALLAZGO') : 'NO ENCONTRADO'
       ];
-      /* Agregar checklist */
+      /* Agregar checklist (8 preguntas) */
       var chk = r.checklist || [];
-      for(var qi=0; qi<7; qi++){
+      for(var qi=0; qi<CHECKLIST_QS.length; qi++){
         var q = chk[qi]||{r:'',obs:''};
         row.push(q.r||'—');
         row.push(q.obs||'');
       }
+      row.push(r.otrasObs||'');
       rows.push(row);
     });
   }
